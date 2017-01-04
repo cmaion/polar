@@ -1,0 +1,195 @@
+#!/usr/bin/env ruby
+# Converts RAW Polar data files in Suunto SML file format.
+
+require 'nokogiri'
+require "#{File.dirname(__FILE__)}/lib/polar_data_parser"
+
+def usage
+  puts "Usage:"
+  puts "  #{__FILE__} <directory> [<sml file>]"
+end
+
+dir = ARGV[0]
+unless dir
+  usage
+  exit -2
+end
+
+output_file = ARGV[1] || File.join(dir, 'output.sml')
+
+def min_per_km_2_m_per_s(val)
+  val == 0 ? 0 : 1000.0 / (val * 60)
+end
+
+def kcal2joules(val)
+  val * 4186.8
+end
+
+def degree2radian(deg)
+  deg.to_f * Math::PI / 180.0
+end
+
+def output_sml(parsed)
+  sport = parsed[:sport]
+  training_session = parsed[:training_session]
+  sensors = parsed[:sensors]
+  samples = parsed[:samples]
+  exercise = parsed[:exercise]
+  exercise_stats = parsed[:exercise_stats]
+  route_samples = parsed[:route_samples]
+
+  start = DateTime.new(training_session.start.date.year, training_session.start.date.month, training_session.start.date.day, training_session.start.time.hour, training_session.start.time.minute, training_session.start.time.seconds, "%+i" % (training_session.start.time_zone_offset / 60)).to_time.utc
+
+  recording_interval = samples.recording_interval.hours * 3600 + samples.recording_interval.minutes * 60 + samples.recording_interval.seconds + (samples.recording_interval.millis.to_f / 1000)
+  samples_count = samples.speed_samples.count
+  route_samples_count = route_samples.latitude.count
+
+  first_gps_fix = DateTime.new(route_samples.first_location_time.date.year, route_samples.first_location_time.date.month, route_samples.first_location_time.date.day, route_samples.first_location_time.time.hour, route_samples.first_location_time.time.minute, route_samples.first_location_time.time.seconds, '+0').to_time.utc
+  time_to_first_gps_fix = first_gps_fix.to_i - start.to_i
+
+  builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
+    xml.sml('SdkVersion' => "2.4.89", 'Modified' => "2012-09-22T10:39:51", 'xmlns:xsi' => "http://www.w3.org/2001/XMLSchema-instance", 'xmlns:xsd' => "http://www.w3.org/2001/XMLSchema", 'xmlns' => "http://www.suunto.com/schemas/sml") {
+      xml.DeviceLog {
+        xml.Header {
+          xml.Duration training_session.duration.hours.to_f * 3600 + training_session.duration.minutes * 60 + training_session.duration.seconds + training_session.duration.millis / 1000
+          xml.Ascent exercise.ascent.round
+          xml.Descent exercise.descent.round
+          #FIXME AscentTime
+          #FIXME DescentTime
+          #FIXME RecoveryTime
+          xml.Speed {
+            xml.Avg min_per_km_2_m_per_s(exercise_stats.speed.average)
+            max = 0
+            max_at = 0
+            samples.speed_samples.each_with_index do |s, i|
+              if s > max
+                max = s
+                max_at = i
+              end
+            end
+            xml.Max min_per_km_2_m_per_s(max)
+            xml.MaxTime max_at * recording_interval
+          }
+          xml.Cadence {
+            xml.Avg exercise_stats.cadence.average.to_f / 60
+            max = 0
+            max_at = 0
+            samples.cadence_samples.each_with_index do |s, i|
+              if s > max
+                max = s
+                max_at = i
+              end
+            end
+            xml.Max max.to_f / 60
+            xml.MaxTime max_at * recording_interval
+          }
+          xml.Altitude {
+            xml.Avg exercise_stats.altitude.average.to_f / 60
+            min = 99999999
+            min_at = 0
+            max = -99999999
+            max_at = 0
+            samples.altitude_samples.each_with_index do |s, i|
+              if s < min
+                min = s
+                min_at = i
+              end
+              if s > max
+                max = s
+                max_at = i
+              end
+            end
+            xml.Max max
+            xml.Min min
+            xml.MaxTime max_at * recording_interval
+            xml.MinTime min_at * recording_interval
+          }
+          xml.HR {
+            xml.Avg exercise_stats.heart_rate.average / 60
+            min = 999
+            min_at = 0
+            max = 0
+            max_at = 0
+            samples.heart_rate_samples.each_with_index do |s, i|
+              if s < min
+                min = s
+                min_at = i
+              end
+              if s > max
+                max = s
+                max_at = i
+              end
+            end
+            xml.Max max.to_f / 60
+            xml.Min min.to_f / 60
+            xml.MaxTime max_at * recording_interval
+            xml.MinTime min_at * recording_interval
+          }
+          #FIXME PeakTrainingEffect
+          xml.ActivityType case sport.identifier.value
+                           when 1 # Running
+                             3
+                           else
+                             0 # FIXME: convert Polar->Suunto IDs
+                           end
+          xml.Activity training_session.session_name.text
+          xml.Distance training_session.distance
+          xml.LogItemCount samples_count + route_samples_count
+          xml.Energy kcal2joules(training_session.calories)
+          xml.TimeToFirstFix time_to_first_gps_fix
+          xml.BatteryChargeAtStart 0
+          xml.BatteryCharge 0
+          xml.DistanceBeforeCalibrationChange 0
+          xml.DateTime start.strftime("%Y-%m-%dT%H:%M:%S")
+        }
+        xml.Device {
+          xml.Name training_session.model_name
+          xml.SerialNumber training_session.device_id
+        }
+        xml.Samples {
+          datetime = start
+          timestamp = 0.0
+          for i in 0..samples_count-1
+            datetime += recording_interval
+            timestamp += recording_interval
+            xml.Sample {
+              #FIXME VerticalSpeed
+              xml.Cadence samples.cadence_samples[i].to_f / 60
+              xml.HR samples.heart_rate_samples[i].to_f / 60
+              #FIXME EnergyConsumption
+              xml.Altitude samples.altitude_samples[i]
+              xml.Speed min_per_km_2_m_per_s(samples.speed_samples[i])
+              xml.Time timestamp
+              xml.SampleType "periodic"
+              xml.UTC datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
+            }
+          end
+
+          for i in 0..route_samples_count-1
+            xml.Sample {
+              xml.GPSAltitude route_samples.gps_altitude[i]
+              xml.NumberOfSatellites route_samples.satellite_amount[i]
+              xml.Latitude degree2radian(route_samples.latitude[i])
+              xml.Longitude degree2radian(route_samples.longitude[i])
+              xml.Time (time_to_first_gps_fix + route_samples.duration[i].to_f / 1000)
+              xml.UTC (first_gps_fix + (route_samples.duration[i].to_f / 1000)).strftime("%Y-%m-%dT%H:%M:%SZ")
+              xml.SampleType "gps-base"
+            }
+          end
+        }
+      }
+    }
+  end
+  builder.to_xml
+end
+
+puts "Converting Polar data files in '#{dir}' to Suunto SML format as '#{output_file}'..."
+parsed = PolarDataParser.parse_directory(dir)
+if parsed.key?(:training_session)
+  File.open(output_file, 'w') do |f|
+    f << output_sml(parsed)
+  end
+  puts "Done"
+else
+  puts "Error: couldn't find training session"
+end

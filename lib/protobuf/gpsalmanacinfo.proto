@@ -1,0 +1,5 @@
+package polar_data;
+
+message PbGPSAlmanacInfo {
+	required .PbSystemDateTime end_time = 1 ;
+}

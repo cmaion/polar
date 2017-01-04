@@ -1,0 +1,14 @@
+package polar_data;
+import "types.proto";
+
+message PbExerciseRouteSamples {
+	repeated uint32 duration = 1 [packed=true];
+	repeated double latitude = 2 [packed=true];
+	repeated double longitude = 3 [packed=true];
+	repeated sint32 gps_altitude = 4 [packed=true];
+	repeated uint32 satellite_amount = 5 [packed=true];
+	repeated bool OBSOLETE_fix = 6 [packed=true];
+	repeated .PbSensorOffline OBSOLETE_gps_offline = 7 ;
+	repeated .PbSystemDateTime OBSOLETE_gps_date_time = 8 ;
+	optional .PbSystemDateTime first_location_time = 9 ;
+}

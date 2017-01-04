@@ -1,0 +1,22 @@
+package polar_data;
+
+message PbVersion {
+	required uint32 major = 1 ;
+	required uint32 minor = 2 ;
+	required uint32 patch = 3 ;
+	optional string specifier = 4 ;
+}
+
+message PbDeviceInfo {
+	optional .polar_data.PbVersion bootloader_version = 1 ;
+	optional .polar_data.PbVersion platform_version = 2 ;
+	optional .polar_data.PbVersion device_version = 3 ;
+	optional uint32 svn_rev = 4 ;
+	optional string electrical_serial_number = 5 ;
+	optional string deviceID = 6 ;
+	optional string model_name = 7 ;
+	optional string hardware_code = 8 ;
+	optional string product_color = 9 ;
+	optional string product_design = 10 ;
+	optional string system_id = 11 ;
+}

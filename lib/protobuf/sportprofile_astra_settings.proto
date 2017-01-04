@@ -1,0 +1,5 @@
+package polar_data;
+
+message PbAstraSportProfileSettings {
+	optional bool vibration = 3 ;
+}

@@ -1,0 +1,12 @@
+package polar_data;
+import "structures.proto";
+
+message PbExerciseSensor {
+	required .PbBleMac mac = 1 ;
+	optional .PbDeviceId device_id = 2 ;
+	optional .PbBleDeviceName device_name = 3 ;
+}
+
+message PbExerciseSensors {
+	repeated .polar_data.PbExerciseSensor sensors = 1 ;
+}

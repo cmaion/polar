@@ -1,0 +1,12 @@
+package polar_data;
+import "types.proto";
+
+message PbRROffline {
+	required .PbDuration start_time = 1 ;
+	required .PbDuration time_interval = 2 ;
+}
+
+message PbExerciseRRIntervals {
+	repeated uint32 rr_intervals = 1  [packed=true];
+	repeated .polar_data.PbRROffline rr_sensor_offline = 2 ;
+}

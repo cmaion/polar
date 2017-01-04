@@ -1,0 +1,51 @@
+#!/usr/bin/env ruby
+# List content and download files through USB connection
+require "#{File.dirname(__FILE__)}/lib/polar_ftp"
+
+def usage
+  puts "Usage:"
+  puts "  #{__FILE__} DIR <directory>"
+  puts "  #{__FILE__} GET <file> [<output_file>]"
+  puts "  #{__FILE__} SYNC [<output_dir>]"
+end
+
+polar_ftp = PolarFtp.new
+
+case (ARGV[0] || '').upcase
+when 'DIR'
+  # Directory listing
+  remote_dir = ARGV[1]
+  unless remote_dir
+    usage
+    exit -2
+  end
+
+  if content = polar_ftp.dir(remote_dir)
+    content.entries.each do |e|
+        if e.name[-1..-1] == '/'
+          # sub directory
+          puts "   #{e.name}"
+        else
+          # file
+          puts "   #{"%-16s" % e.name}#{"%10i" % e.size}"
+        end
+      end
+  end
+
+when 'GET'
+  # File download
+  remote_file = ARGV[1]
+  unless remote_file
+    usage
+    exit -2
+  end
+
+  polar_ftp.get(remote_file, ARGV[2])
+
+when 'SYNC'
+  polar_ftp.sync(ARGV[1])
+
+else
+  usage
+  exit -2
+end

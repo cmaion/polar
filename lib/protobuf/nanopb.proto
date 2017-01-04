@@ -1,0 +1,5 @@
+
+message NanoPBOptions {
+	optional int32 max_size = 1 ;
+	optional int32 max_count = 2 ;
+}

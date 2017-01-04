@@ -1,0 +1,5 @@
+package polar_data;
+
+message PbUserDb {
+	required uint32 current_user_index = 1 ;
+}

@@ -1,0 +1,5 @@
+package polar_data;
+
+message PbMcLarenSportProfileSettings {
+	required bool auto_start = 4 ;
+}

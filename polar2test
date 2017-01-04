@@ -1,0 +1,67 @@
+#!/usr/bin/env ruby
+# Parses RAW Polar data files and prints some parsed data for testing purposes
+
+require "#{File.dirname(__FILE__)}/lib/polar_data_parser"
+
+def usage
+  puts "Usage:"
+  puts "  #{__FILE__} <directory>"
+end
+
+dir = ARGV[0]
+unless dir
+  usage
+  exit -2
+end
+
+def output_test(parsed)
+  sport = parsed[:sport]
+  training_session = parsed[:training_session]
+  sensors = parsed[:sensors]
+  samples = parsed[:samples]
+  route_samples = parsed[:route_samples]
+
+  recording_interval = samples.recording_interval.hours * 3600 + samples.recording_interval.minutes * 60 + samples.recording_interval.seconds + (samples.recording_interval.millis.to_f / 1000)
+  samples_count = samples.speed_samples.count
+  route_samples_count = route_samples.latitude.count
+
+  puts "Sport: #{sport.identifier.value} (#{sport.translation.map { |t| t.text.text if t.id.language == 'en' }.compact.join('/')})"
+  puts "Training session: #{training_session.sport.value} (#{training_session.session_name.text})"
+  puts "Duration: #{training_session.duration.hours}:#{training_session.duration.minutes}:#{training_session.duration.seconds}.#{training_session.duration.millis}"
+  puts "Distance: #{"%.1f" % training_session.distance}m"
+  puts "Geo: latitude #{training_session.latitude}/longitude #{training_session.longitude}"
+  puts "Heart rate: avg #{training_session.heart_rate.average}, max #{training_session.heart_rate.maximum}"
+
+  if sensors
+    sensors.sensors.each do |sensor|
+      puts "Sensor used: #{sensor.mac.mac.unpack('H*').first.scan(/../).join(':') }"
+    end
+  end
+
+  timestamp = Time.at(0).utc
+  for i in 0..samples_count-1
+    timestamp += recording_interval
+    r = []
+    r << timestamp.strftime("%H:%M:%S")
+    r << "#{"%7.1f" % samples.distance_samples[i]} m" if samples.distance_samples[i]
+    r << "#{"%3.2f" % samples.speed_samples[i]} min/km" if samples.speed_samples[i]
+    r << "FC=#{"%3.0f" % samples.heart_rate_samples[i]} bpm" if samples.heart_rate_samples[i]
+    r << "alt=#{"%4.1f" % samples.altitude_samples[i]} m" if samples.altitude_samples[i]
+    r << "temp=#{"%2.1f" % samples.temperature_samples[i]} °C" if samples.temperature_samples[i]
+    r << "cadence=#{samples.cadence_samples[i]}" if samples.cadence_samples[i]
+    puts r.join(', ')
+  end
+
+  puts "GPX first fix: #{DateTime.new(route_samples.first_location_time.date.year, route_samples.first_location_time.date.month, route_samples.first_location_time.date.day, route_samples.first_location_time.time.hour, route_samples.first_location_time.time.minute, route_samples.first_location_time.time.seconds, '+0').to_s}"
+  for i in 0..route_samples_count-1
+    timestamp = Time.at(route_samples.duration[i].to_f / 1000).utc
+    puts "#{timestamp.strftime("%H:%M:%S")}, latitude=#{route_samples.latitude[i]}, longitude=#{route_samples.longitude[i]}, gps_altitude=#{route_samples.gps_altitude[i]}, satellites=#{route_samples.satellite_amount[i]}"
+  end
+end
+
+parsed = PolarDataParser.parse_directory(dir)
+if parsed.key?(:training_session)
+  output_test(parsed)
+else
+  puts "Error: couldn't find training session"
+end
