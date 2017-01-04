@@ -44,7 +44,7 @@ def output_sml(parsed)
   samples_count = samples.speed_samples.count
   route_samples_count = route_samples.latitude.count
 
-  first_gps_fix = DateTime.new(route_samples.first_location_time.date.year, route_samples.first_location_time.date.month, route_samples.first_location_time.date.day, route_samples.first_location_time.time.hour, route_samples.first_location_time.time.minute, route_samples.first_location_time.time.seconds, '+0').to_time.utc
+  first_gps_fix = route_samples_count > 0 ? DateTime.new(route_samples.first_location_time.date.year, route_samples.first_location_time.date.month, route_samples.first_location_time.date.day, route_samples.first_location_time.time.hour, route_samples.first_location_time.time.minute, route_samples.first_location_time.time.seconds, '+0').to_time.utc : nil
   time_to_first_gps_fix = first_gps_fix.to_i - start.to_i
 
   builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
@@ -136,7 +136,7 @@ def output_sml(parsed)
           xml.Distance training_session.distance
           xml.LogItemCount samples_count + route_samples_count
           xml.Energy kcal2joules(training_session.calories)
-          xml.TimeToFirstFix time_to_first_gps_fix
+          xml.TimeToFirstFix time_to_first_gps_fix if first_gps_fix
           xml.BatteryChargeAtStart 0
           xml.BatteryCharge 0
           xml.DistanceBeforeCalibrationChange 0
