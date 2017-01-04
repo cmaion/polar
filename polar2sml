@@ -127,8 +127,12 @@ def output_sml(parsed)
           }
           #FIXME PeakTrainingEffect
           xml.ActivityType case sport.identifier.value
-                           when 1 # Running
+                           when 1   # Running
                              3
+                           when 126 # Core, mapped to Gymastics
+                             67
+                           when 66  # Stretching
+                             79
                            else
                              0 # FIXME: convert Polar->Suunto IDs
                            end
