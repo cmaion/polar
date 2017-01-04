@@ -26,7 +26,6 @@ module PolarData
     optional :float, :distance, 4
     optional :uint32, :calories, 5
     optional ::PbTrainingLoad, :training_load, 6
-    repeated ::PbFeatureType, :available_sensor_features, 7
     optional ::PbRunningIndex, :running_index, 9
     optional :float, :ascent, 10
     optional :float, :descent, 11
