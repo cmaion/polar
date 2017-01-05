@@ -14,20 +14,26 @@ unless dir
   exit -2
 end
 
+def pb_duration_to_string duration
+  "#{"%02i" % duration.hours}:#{"%02i" % duration.minutes}:#{"%02i" % duration.seconds}.#{"%03i" % duration.millis}"
+end
+
 def output_test(parsed)
   sport = parsed[:sport]
   training_session = parsed[:training_session]
   sensors = parsed[:sensors]
   samples = parsed[:samples]
   route_samples = parsed[:route_samples]
+  laps = parsed[:exercise_laps]
 
   recording_interval = samples.recording_interval.hours * 3600 + samples.recording_interval.minutes * 60 + samples.recording_interval.seconds + (samples.recording_interval.millis.to_f / 1000)
   samples_count = samples.speed_samples.count
   route_samples_count = route_samples.latitude.count
+  laps_count = laps ? laps.laps.count : 0
 
   puts "Sport: #{sport.identifier.value} (#{sport.translation.map { |t| t.text.text if t.id.language == 'en' }.compact.join('/')})"
   puts "Training session: #{training_session.sport.value} (#{training_session.session_name.text})"
-  puts "Duration: #{training_session.duration.hours}:#{training_session.duration.minutes}:#{training_session.duration.seconds}.#{training_session.duration.millis}"
+  puts "Duration: #{pb_duration_to_string training_session.duration}"
   puts "Distance: #{"%.1f" % training_session.distance}m"
   puts "Geo: latitude #{training_session.latitude}/longitude #{training_session.longitude}"
   puts "Heart rate: avg #{training_session.heart_rate.average}, max #{training_session.heart_rate.maximum}"
@@ -52,11 +58,23 @@ def output_test(parsed)
     puts r.join(', ')
   end
 
-  puts "GPX first fix: #{DateTime.new(route_samples.first_location_time.date.year, route_samples.first_location_time.date.month, route_samples.first_location_time.date.day, route_samples.first_location_time.time.hour, route_samples.first_location_time.time.minute, route_samples.first_location_time.time.seconds, '+0').to_s}"
-  for i in 0..route_samples_count-1
-    timestamp = Time.at(route_samples.duration[i].to_f / 1000).utc
-    puts "#{timestamp.strftime("%H:%M:%S")}, latitude=#{route_samples.latitude[i]}, longitude=#{route_samples.longitude[i]}, gps_altitude=#{route_samples.gps_altitude[i]}, satellites=#{route_samples.satellite_amount[i]}"
+  if route_samples_count > 0
+    puts "GPX first fix: #{DateTime.new(route_samples.first_location_time.date.year, route_samples.first_location_time.date.month, route_samples.first_location_time.date.day, route_samples.first_location_time.time.hour, route_samples.first_location_time.time.minute, route_samples.first_location_time.time.seconds, '+0').to_s}"
+    for i in 0..route_samples_count-1
+      timestamp = Time.at(route_samples.duration[i].to_f / 1000).utc
+      puts "#{timestamp.strftime("%H:%M:%S")}, latitude=#{route_samples.latitude[i]}, longitude=#{route_samples.longitude[i]}, gps_altitude=#{route_samples.gps_altitude[i]}, satellites=#{route_samples.satellite_amount[i]}"
+    end
   end
+
+  if laps_count > 0
+    puts "Laps: #{laps_count}"
+    puts "Best lap duration: #{pb_duration_to_string laps.summary.best_lap_duration}"
+    puts "Average lap duration: #{pb_duration_to_string laps.summary.average_lap_duration}"
+    laps.laps.each_with_index do |lap, i|
+      puts "#{pb_duration_to_string lap.header.split_time}, lap #{i + 1}: #{pb_duration_to_string lap.header.duration}, #{lap.header.distance} m"
+    end
+  end
+
 end
 
 parsed = PolarDataParser.parse_directory(dir)

@@ -1,4 +1,5 @@
 package polar_data;
+import "types.proto";
 
 message PbLapHeader {
 	required .PbDuration split_time = 1 ;
@@ -7,7 +8,7 @@ message PbLapHeader {
 	optional float ascent = 4 ;
 	optional float descent = 5 ;
 	optional .polar_data.PbLapHeader.PbAutolapType autolap_type = 6 ;
-	
+
 	enum PbAutolapType {
 		AUTOLAP_TYPE_DISTANCE = 1;
 		AUTOLAP_TYPE_DURATION = 2;

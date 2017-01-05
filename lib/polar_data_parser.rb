@@ -7,6 +7,7 @@ require "#{File.dirname(__FILE__)}/protobuf/exercise_sensors.pb"
 require "#{File.dirname(__FILE__)}/protobuf/sport.pb"
 require "#{File.dirname(__FILE__)}/protobuf/training_session.pb"
 require "#{File.dirname(__FILE__)}/protobuf/exercise_base.pb"
+require "#{File.dirname(__FILE__)}/protobuf/exercise_laps.pb"
 require "#{File.dirname(__FILE__)}/protobuf/exercise_stats.pb"
 require "#{File.dirname(__FILE__)}/protobuf/exercise_rr_samples.pb"
 require "#{File.dirname(__FILE__)}/protobuf/exercise_samples.pb"
@@ -33,6 +34,10 @@ module PolarDataParser
 
     if exercise_file = files_in_dir.select { |f| f == 'BASE.BPB' }.first
       parsed[:exercise] = PolarData::PbExerciseBase.parse(File.open(File.join(dir, exercise_file), 'rb').read)
+    end
+
+    if exercise_laps_file = files_in_dir.select { |f| f == 'LAPS.BPB' }.first
+      parsed[:exercise_laps] = PolarData::PbLaps.parse(File.open(File.join(dir, exercise_laps_file), 'rb').read)
     end
 
     if exercise_stats_file = files_in_dir.select { |f| f == 'STATS.BPB' }.first
