@@ -35,6 +35,7 @@ def output_sml(parsed)
   sensors = parsed[:sensors]
   samples = parsed[:samples]
   exercise = parsed[:exercise]
+  laps = parsed[:exercise_laps]
   exercise_stats = parsed[:exercise_stats]
   route_samples = parsed[:route_samples]
 
@@ -42,6 +43,7 @@ def output_sml(parsed)
 
   recording_interval = samples.recording_interval.hours * 3600 + samples.recording_interval.minutes * 60 + samples.recording_interval.seconds + (samples.recording_interval.millis.to_f / 1000)
   samples_count = samples.speed_samples.count
+  laps_count = laps ? laps.laps.count : 0
   route_samples_count = route_samples.latitude.count
 
   first_gps_fix = route_samples_count > 0 ? DateTime.new(route_samples.first_location_time.date.year, route_samples.first_location_time.date.month, route_samples.first_location_time.date.day, route_samples.first_location_time.time.hour, route_samples.first_location_time.time.minute, route_samples.first_location_time.time.seconds, '+0').to_time.utc : nil
@@ -138,7 +140,7 @@ def output_sml(parsed)
                            end
           xml.Activity training_session.session_name.text
           xml.Distance training_session.distance
-          xml.LogItemCount samples_count + route_samples_count
+          xml.LogItemCount samples_count + laps_count + route_samples_count
           xml.Energy kcal2joules(training_session.calories)
           xml.TimeToFirstFix time_to_first_gps_fix if first_gps_fix
           xml.BatteryChargeAtStart 0
@@ -167,6 +169,24 @@ def output_sml(parsed)
               xml.SampleType "periodic"
               xml.UTC datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
             }
+          end
+
+          if laps_count > 0
+            for i in 0..laps_count-1
+              lap = laps.laps[i]
+              xml.Sample {
+                lap_split_time = (lap.header.split_time.hours * 3600 + lap.header.split_time.minutes * 60 +  lap.header.split_time.seconds).to_f + lap.header.split_time.millis.to_f / 1000
+                xml.UTC (start + lap_split_time).strftime("%Y-%m-%dT%H:%M:%SZ")
+                xml.Time lap_split_time
+                xml.Events {
+                  xml.Lap {
+                    xml.Type 'Manual'
+                    xml.Duration (lap.header.duration.hours * 3600 + lap.header.duration.minutes * 60 +  lap.header.duration.seconds).to_f + lap.header.duration.millis.to_f / 1000
+                    xml.Distance lap.header.distance
+                  }
+                }
+              }
+            end
           end
 
           for i in 0..route_samples_count-1
