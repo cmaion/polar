@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+require 'hidapi'
+HIDAPI::SetupTaskHelper.new(0x0da4, 0x0008, 'polar', 0).run

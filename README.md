@@ -12,29 +12,50 @@ Tested with:
 * Polar V800
 * might also work on other models (A360, M400, Loop...), but this is untested
 
-Tested on Linux (Ubuntu 16.10).
+Tested on Linux (Ubuntu 16.10) and macOS (Yosemite).
 
 
-## Installation
-Install the ruby language and the following ruby gems:
+## Platform specific prerequisites
+### Linux
+Install the ruby language (>= 2.1) and dev tools (C compiler & co), if necessary.
 
-```sh
-$ gem install ruby-protocol-buffers
-$ gem install varint   # Optional (increases ruby-protocol-buffers performance)
-$ gem install libusb   # Required by polar_ftp
-$ gem install zlib     # Required by polar2sml
-$ gem install nokogiri # Required by polar2sml
-```
-
-Copy the content of this repository wherever you want.
-
-
-To be able to connect to the watch on Linux from an unpriviledged user, you may want to add a udev rule to grant all users access to the USB device:
+To be able to connect to the watch from an unpriviledged user, you may want to add a udev rule to grant all users access to the USB device:
 
 ```sh
 $ sudo cp pkg/99-polar.rules /etc/udev/rules.d
 $ sudo udevadm control --reload-rules
 ```
+
+
+### macOS
+Install the ruby language (>= 2.1) and dev tools, if necessary:
+
+* install Xcode from the AppStore and Xcode Command Line Tools (`xcode-select --install`).
+* install [Homebrew package manager](http://brew.sh)
+* run `brew install ruby` to get the latest version of ruby
+
+To connect to the USB watch, macOS needs to be told not to attach it's default driver to the watch connection:
+
+``` sh
+$ sudo gem install hidapi
+$ pkg/macos_usb
+```
+
+Unplug the watch if already connected, and plug it again.
+
+
+
+## Installation
+Install the following ruby gems:
+
+```sh
+$ gem install ruby-protocol-buffers
+$ gem install varint   # Optional (increases ruby-protocol-buffers performance)
+$ gem install libusb   # Required by polar_ftp
+$ gem install nokogiri # Required by polar2sml
+```
+
+Download this repository and put it's content wherever you want (or use `git clone https://github.com/cmaion/polar` to clone it locally).
 
 
 ## Usage
