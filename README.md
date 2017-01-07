@@ -47,7 +47,7 @@ Unplug the watch if already connected, and plug it again.
 
 ### Windows
 Install the ruby language (>= 2.1):
-* [RubyInstaller](http://rubyinstaller.org) works with Ruby 2.3. Pick the 32 bits (not x64) version.
+* [RubyInstaller](http://rubyinstaller.org). Pick the 32 bits (not x64) version - Ruby 2.3 works fine.
 
 To connect to the watch, you need the `libusb-1.0.dll` DLL:
 
@@ -72,7 +72,7 @@ C:\Users\...> C:\Ruby23\bin\ruby.exe C:\path\to\this\project\directory\polar_tra
 
 
 ## Installation (all platforms)
-Install the following ruby gems:
+Install the following Ruby gems:
 
 ```sh
 $ gem install ruby-protocol-buffers
@@ -85,7 +85,7 @@ Download this repository and put it's content wherever you want (or use `git clo
 
 
 ## Usage
-List and download single raw files from the Polar watch, connected through USB:
+List and download raw files from the Polar watch, connected through USB:
 
 ```sh
 $ polar_ftp DIR </path/to/directory>
