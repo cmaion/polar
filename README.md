@@ -6,6 +6,7 @@ A set of command line tools written in Ruby to interact with Polar watches and d
   * download raw files
   * backup complete content
 * `polar_training2sml`: convert raw polar training sessions data files to the Suuntu SML file format
+* `polar_rrrecord2test`: displays content of RR recording results test
 
 Tested with:
 * Polar M200

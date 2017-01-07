@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+# Parses RAW Polar RR record result data files and prints some parsed data for testing purposes
+
+require "#{File.dirname(__FILE__)}/lib/polar_data_parser"
+
+def usage
+  puts "Usage:"
+  puts "  #{__FILE__} <directory>"
+end
+
+dir = ARGV[0]
+unless dir
+  usage
+  exit -2
+end
+
+def output_test(parsed)
+  result = parsed[:result]
+  rr = parsed[:rr]
+
+  start_time = DateTime.new(result.start_time.date.year, result.start_time.date.month, result.start_time.date.day, result.start_time.time.hour, result.start_time.time.minute, result.start_time.time.seconds, "%+i" % (result.start_time.time_zone_offset / 60)).to_time
+  end_time = DateTime.new(result.end_time.date.year, result.end_time.date.month, result.end_time.date.day, result.end_time.time.hour, result.end_time.time.minute, result.end_time.time.seconds, "%+i" % (result.end_time.time_zone_offset / 60)).to_time
+
+  puts "Started       : #{start_time}"
+  puts "Ended         : #{end_time}"
+  puts "Heart rate min: #{result.hr_min}"
+  puts "Heart rate avg: #{result.hr_avg}"
+  puts "Heart rate max: #{result.hr_max}"
+  puts "RR intervals  :"
+  puts rr.rr_intervals.join(', ')
+end
+
+parsed = PolarDataParser.parse_rr_recording_result(dir)
+if parsed.key?(:result) && parsed.key?(:rr)
+  output_test(parsed)
+else
+  puts "Error: couldn't find RR record result"
+end
