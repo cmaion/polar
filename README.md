@@ -136,7 +136,9 @@ $ polar_activitysamples2csv <path/to/raw/polar/daily_activity_samples> [<output_
 
 # Example:
 $ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
-$ polar_training2sml ~/Polar/<device_id>/U/0/<YYYYMMDD>/ACT/
+$ polar_training2sml ~/Polar/<device_id>/U/0/<YYYYMMDD>/ACT/ /tmp/daily.csv
+$ cat /tmp/daily.csv
+Time,Activity,Steps,Sport
 [...]
 YYYY-MM-DD 09:53:00 +0100,SEDENTARY,2,-1
 YYYY-MM-DD 09:54:00 +0100,LIGHT,20,-1
