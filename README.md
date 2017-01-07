@@ -13,7 +13,7 @@ Tested with:
 * Polar V800
 * might also work on other models (A360, M400, Loop...), but this is untested
 
-Tested on Linux (Ubuntu 16.10) and macOS (Yosemite).
+Tested on Linux (Ubuntu 16.10), macOS (Yosemite) and Windows (10).
 
 
 ## Platform specific prerequisites
@@ -35,7 +35,7 @@ Install the ruby language (>= 2.1) and dev tools, if necessary:
 * install [Homebrew package manager](http://brew.sh)
 * run `brew install ruby` to get the latest version of ruby
 
-To connect to the USB watch, macOS needs to be told not to attach it's default driver to the watch connection:
+To connect to the watch, macOS needs to be told not to attach it's default driver to the USB connection:
 
 ``` sh
 $ sudo gem install hidapi
@@ -45,8 +45,33 @@ $ pkg/macos_usb
 Unplug the watch if already connected, and plug it again.
 
 
+### Windows
+Install the ruby language (>= 2.1):
+* [RubyInstaller](http://rubyinstaller.org) works with Ruby 2.3. Pick the 32 bits (not x64) version.
 
-## Installation
+To connect to the watch, you need the `libusb-1.0.dll` DLL:
+
+* copy the one provided in `pkg\libusb-1.0.dll` to `C:\Windows\SYSTEM32`
+* _or_ download it from [libusb.info](http://libusb.info) (extract the 7-Zip archive, and use the DLL found in MinGW32\dll)
+
+
+*NOTE*: use the Windows command line (`cmd`) to run the Ruby programs included in this project.
+
+Example:
+
+```
+C:\Users\...> C:\Ruby23\bin\ruby.exe C:\path\to\this\project\directory\polar_ftp DIR /
+
+C:\Users\...> C:\Ruby23\bin\ruby.exe C:\path\to\this\project\directory\polar_ftp DIR /U/0/
+
+C:\Users\...> C:\Ruby23\bin\ruby.exe C:\path\to\this\project\directory\polar_ftp SYNC
+
+C:\Users\...> C:\Ruby23\bin\ruby.exe C:\path\to\this\project\directory\polar_training2sml C:/Users/.../Polar/<device_id>/U/0/<YYYYMMDD>/E/<training_session_id>/ /temp/output.sml
+```
+
+
+
+## Installation (all platforms)
 Install the following ruby gems:
 
 ```sh
