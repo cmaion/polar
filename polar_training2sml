@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Converts RAW Polar data files in Suunto SML file format.
+# Converts RAW Polar training session data files in Suunto SML file format.
 
 require 'nokogiri'
 require "#{File.dirname(__FILE__)}/lib/polar_data_parser"
@@ -207,8 +207,8 @@ def output_sml(parsed)
   builder.to_xml
 end
 
-puts "Converting Polar data files in '#{dir}' to Suunto SML format as '#{output_file}'..."
-parsed = PolarDataParser.parse_directory(dir)
+puts "Converting Polar training session in '#{dir}' to Suunto SML format as '#{output_file}'..."
+parsed = PolarDataParser.parse_training_session(dir)
 if parsed.key?(:training_session)
   File.open(output_file, 'w') do |f|
     f << output_sml(parsed)

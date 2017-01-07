@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Parses RAW Polar data files and prints some parsed data for testing purposes
+# Parses RAW Polar training session data files and prints some parsed data for testing purposes
 
 require "#{File.dirname(__FILE__)}/lib/polar_data_parser"
 
@@ -77,7 +77,7 @@ def output_test(parsed)
 
 end
 
-parsed = PolarDataParser.parse_directory(dir)
+parsed = PolarDataParser.parse_training_session(dir)
 if parsed.key?(:training_session)
   output_test(parsed)
 else

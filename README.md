@@ -1,11 +1,11 @@
 ## Synopsis
-A set of tools written in Ruby to interact with Polar watches and decode raw data files.
+A set of command line tools written in Ruby to interact with Polar watches and decode raw data files.
 
 * `polar_ftp`: access the Polar file system through USB
   * list content on the Polar watch
   * download raw files
   * backup complete content
-* `polar2sml`: convert raw polar training sessions data files to the Suuntu SML file format
+* `polar_training2sml`: convert raw polar training sessions data files to the Suuntu SML file format
 
 Tested with:
 * Polar M200
@@ -52,7 +52,7 @@ Install the following ruby gems:
 $ gem install ruby-protocol-buffers
 $ gem install varint   # Optional (increases ruby-protocol-buffers performance)
 $ gem install libusb   # Required by polar_ftp
-$ gem install nokogiri # Required by polar2sml
+$ gem install nokogiri # Required by polar_training2sml
 ```
 
 Download this repository and put it's content wherever you want (or use `git clone https://github.com/cmaion/polar` to clone it locally).
@@ -104,11 +104,11 @@ $ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
 Conversion to Suunto SML:
 
 ```sh
-$ polar2sml <path/to/raw/polar/training_session_id> [<output_sml_file>]
+$ polar_training2sml <path/to/raw/polar/training_session_id> [<output_sml_file>]
 
 # Example:
 $ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
-$ polar2sml ~/Polar/<device_id>/U/0/<YYYYMMDD>/E/<training_session_id>/ /tmp/output.sml
+$ polar_training2sml ~/Polar/<device_id>/U/0/<YYYYMMDD>/E/<training_session_id>/ /tmp/output.sml
 ```
 
 ## Author

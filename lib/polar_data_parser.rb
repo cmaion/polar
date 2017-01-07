@@ -14,7 +14,7 @@ require "#{File.dirname(__FILE__)}/protobuf/exercise_samples.pb"
 require "#{File.dirname(__FILE__)}/protobuf/exercise_route.pb"
 
 module PolarDataParser
-  def self.parse_directory(dir)
+  def self.parse_training_session(dir)
     parsed = {}
 
     files_in_dir = Dir.glob("#{dir}/*").map { |f| f.sub(/^#{dir}\//, '') }
