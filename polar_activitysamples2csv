@@ -1,0 +1,86 @@
+#!/usr/bin/env ruby
+# Parses RAW Polar activity samples data files (activity type, steps, metabolic equivalent, and sport id through the day) and convert to CSV
+
+require "#{File.dirname(__FILE__)}/lib/polar_data_parser"
+
+def usage
+  puts "Usage:"
+  puts "  #{__FILE__} <directory> [<csv file>]"
+end
+
+dir = ARGV[0]
+unless dir
+  usage
+  exit -2
+end
+
+output_file = ARGV[1] || File.join(dir, 'output.csv')
+
+def output_csv(parsed)
+  samples = parsed[:samples]
+  start_time = DateTime.new(samples.start_time.date.year, samples.start_time.date.month, samples.start_time.date.day, samples.start_time.time.hour, samples.start_time.time.minute, samples.start_time.time.seconds, "%+i" % (samples.start_time.time_zone_offset / 60)).to_time
+
+  result = {}
+
+  # Steps
+  steps_interval = samples.steps_recording_interval.hours * 3600 + samples.steps_recording_interval.minutes * 60 + samples.steps_recording_interval.seconds + samples.steps_recording_interval.millis.to_f / 1000
+  samples.steps_samples.each_with_index do |steps, i|
+    ts = start_time + i * steps_interval
+    result[ts] ||= {}
+    result[ts][:steps] = steps
+  end
+
+  # met (metabolic equivalent)
+  met_interval = samples.met_recording_interval.hours * 3600 + samples.met_recording_interval.minutes * 60 + samples.met_recording_interval.seconds + samples.met_recording_interval.millis.to_f / 1000
+  samples.met_samples.each_with_index do |met, i|
+    ts = start_time + i * met_interval
+    result[ts] ||= {}
+    result[ts][:met] = met
+  end
+
+  # Activity info
+  samples.activity_info.each do |act|
+    ts = DateTime.new(act.time_stamp.date.year, act.time_stamp.date.month, act.time_stamp.date.day, act.time_stamp.time.hour, act.time_stamp.time.minute, act.time_stamp.time.seconds, "%+i" % (act.time_stamp.time_zone_offset / 60)).to_time
+
+    result[ts] ||= {}
+    result[ts][:activity] = act.value
+  end
+
+  # Sport info
+  samples.sport_info.each do |sport|
+    ts = DateTime.new(sport.time_stamp.date.year, sport.time_stamp.date.month, sport.time_stamp.date.day, sport.time_stamp.time.hour, sport.time_stamp.time.minute, sport.time_stamp.time.seconds, "%+i" % (sport.time_stamp.time_zone_offset / 60)).to_time
+
+    result[ts] ||= {}
+    result[ts][:sport] = sport.sport_profile_id
+  end
+
+  # Result
+  buffer = "Time,Activity,Steps,Metabolic equivalent,Sport\n"
+  no_sport = (1<<64)-1
+  sport = no_sport
+  activity_name = ''
+  result.sort { |(ts1,r1),(ts2,r2)| ts1 <=> ts2 }.each do |ts, r|
+    if r[:activity]
+      activity_name = PolarData::PbActivityInfo::ActivityClass.value_to_names_map[r[:activity]].first.to_s
+    end
+
+    if r[:sport]
+      sport = r[:sport]
+    end
+
+    buffer << "#{ts},#{activity_name},#{r[:steps]},#{r[:met]},#{sport == no_sport ? -1 : sport}\n" if r.key?(:step) || r.key?(:met)
+  end
+
+  buffer
+end
+
+puts "Converting Polar daily activity samples in '#{dir}' to CSV format as '#{output_file}'..."
+parsed = PolarDataParser.parse_activity_samples(dir)
+if parsed.key?(:samples)
+  File.open(output_file, 'w') do |f|
+    f << output_csv(parsed)
+  end
+  puts "Done"
+else
+  puts "Error: couldn't find activity samples"
+end
