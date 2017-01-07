@@ -13,6 +13,7 @@ require "#{File.dirname(__FILE__)}/protobuf/exercise_rr_samples.pb"
 require "#{File.dirname(__FILE__)}/protobuf/exercise_samples.pb"
 require "#{File.dirname(__FILE__)}/protobuf/exercise_route.pb"
 require "#{File.dirname(__FILE__)}/protobuf/rr_recordtestresult.pb"
+require "#{File.dirname(__FILE__)}/protobuf/act_samples.pb"
 
 module PolarDataParser
   def self.parse_training_session(dir)
@@ -67,6 +68,18 @@ module PolarDataParser
 
     if file = files_in_dir.select { |f| f == 'RR.GZB' }.first
       parsed[:rr] = PolarData::PbExerciseRRIntervals.parse(Zlib::GzipReader.new(File.open(File.join(dir, file), 'rb')).read)
+    end
+
+    parsed
+  end
+
+  def self.parse_activity_samples(dir)
+    parsed = {}
+
+    files_in_dir = Dir.glob("#{dir}/*").map { |f| f.sub(/^#{dir}\//, '') }
+
+    if file = files_in_dir.select { |f| f == 'ASAMPL0.BPB' }.first
+      parsed[:samples] = PolarData::PbActivitySamples.parse(File.open(File.join(dir, file), 'rb').read)
     end
 
     parsed

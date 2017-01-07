@@ -1,4 +1,5 @@
 package polar_data;
+import "types.proto";
 
 message PbSportInfo {
 	required float factor = 1 ;
@@ -10,7 +11,7 @@ message PbActivityInfo {
 	required .polar_data.PbActivityInfo.ActivityClass value = 1 ;
 	required .PbLocalDateTime time_stamp = 2 ;
 	optional float factor = 3 ;
-	
+
 	enum ActivityClass {
 		SLEEP = 1;
 		SEDENTARY = 2;
@@ -37,7 +38,7 @@ message PbActivitySamples {
 	required .PbDuration met_recording_interval = 2 ;
 	required .PbDuration steps_recording_interval = 3 ;
 	repeated float met_samples = 4 ;
-	repeated uint32 steps_samples = 5 ;
+	repeated uint32 steps_samples = 5 [packed=true];
 	repeated .polar_data.PbSportInfo sport_info = 6 ;
 	repeated .polar_data.PbActivityInfo activity_info = 7 ;
 	repeated .polar_data.PbInActivityTriggerInfo inactivity_trigger = 8 ;

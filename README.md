@@ -5,6 +5,7 @@ A set of command line tools written in Ruby to interact with Polar watches and d
   * list content on the Polar watch
   * download raw files
   * backup complete content
+* `polar_activitysamples2csv`: convert raw polar daily activity samples (activity, steps and sport id) to CSV format
 * `polar_training2sml`: convert raw polar training sessions data files to the Suuntu SML file format
 * `polar_rrrecord2txt`: displays content of RR recording results and exports to TXT file (V800)
 
@@ -126,6 +127,32 @@ Downloading '/U/0/<YYYYMMDD>/E/<training_session_id>/00/SAMPLES.GZB' as 'SAMPLES
 $ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
 [...]
 ```
+
+
+Convert daily activity samples to CSV file:
+
+```sh
+$ polar_activitysamples2csv <path/to/raw/polar/daily_activity_samples> [<output_csv_file>]
+
+# Example:
+$ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
+$ polar_training2sml ~/Polar/<device_id>/U/0/<YYYYMMDD>/ACT/
+[...]
+YYYY-MM-DD 09:53:00 +0100,SEDENTARY,2,-1
+YYYY-MM-DD 09:54:00 +0100,LIGHT,20,-1
+YYYY-MM-DD 09:55:00 +0100,LIGHT,22,-1
+YYYY-MM-DD 09:56:00 +0100,LIGHT,20,-1
+YYYY-MM-DD 09:57:00 +0100,LIGHT,28,-1
+YYYY-MM-DD 09:58:00 +0100,INTERMITTENT_VIGOROUS,108,-1
+YYYY-MM-DD 09:59:00 +0100,INTERMITTENT_VIGOROUS,85,1
+YYYY-MM-DD 10:00:00 +0100,INTERMITTENT_VIGOROUS,100,1
+YYYY-MM-DD 10:01:00 +0100,INTERMITTENT_VIGOROUS,100,1
+YYYY-MM-DD 10:02:00 +0100,INTERMITTENT_VIGOROUS,89,1
+YYYY-MM-DD 10:03:00 +0100,CONTINUOUS_VIGOROUS,85,1
+YYYY-MM-DD 10:04:00 +0100,CONTINUOUS_VIGOROUS,87,1
+[...]
+```
+
 
 Convert a training session to Suunto SML file:
 
