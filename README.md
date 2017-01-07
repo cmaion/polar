@@ -6,7 +6,7 @@ A set of command line tools written in Ruby to interact with Polar watches and d
   * download raw files
   * backup complete content
 * `polar_training2sml`: convert raw polar training sessions data files to the Suuntu SML file format
-* `polar_rrrecord2test`: displays content of RR recording results test
+* `polar_rrrecord2txt`: displays content of RR recording results and exports to txt file
 
 Tested with:
 * Polar M200
@@ -110,6 +110,17 @@ $ polar_training2sml <path/to/raw/polar/training_session_id> [<output_sml_file>]
 # Example:
 $ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
 $ polar_training2sml ~/Polar/<device_id>/U/0/<YYYYMMDD>/E/<training_session_id>/ /tmp/output.sml
+```
+
+
+Read RR recording result and converts to txt file:
+
+```sh
+$ polar_rrrecord2txt <path/to/raw/polar/rr_record_result> [<output_txt_file>]
+
+# Example:
+$ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
+$ polar_rrrecord2txt ~/Polar/<device_id>/U/0/<YYYYMMDD>/RRREC/<rr_record_id>/ /tmp/output.txt
 ```
 
 ## Author

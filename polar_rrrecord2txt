@@ -1,11 +1,11 @@
 #!/usr/bin/env ruby
-# Parses RAW Polar RR record result data files and prints some parsed data for testing purposes
+# Converts RAW Polar RR recording result data files in txt file format (same format as Polar Flow export)
 
 require "#{File.dirname(__FILE__)}/lib/polar_data_parser"
 
 def usage
   puts "Usage:"
-  puts "  #{__FILE__} <directory>"
+  puts "  #{__FILE__} <directory> [<txt file>]"
 end
 
 dir = ARGV[0]
@@ -14,7 +14,9 @@ unless dir
   exit -2
 end
 
-def output_test(parsed)
+output_file = ARGV[1] || File.join(dir, 'output.txt')
+
+def output_txt(parsed)
   result = parsed[:result]
   rr = parsed[:rr]
 
@@ -26,13 +28,23 @@ def output_test(parsed)
   puts "Heart rate min: #{result.hr_min}"
   puts "Heart rate avg: #{result.hr_avg}"
   puts "Heart rate max: #{result.hr_max}"
-  puts "RR intervals  :"
-  puts rr.rr_intervals.join(', ')
+  time = 0.0
+  result = "0.000 #{(rr.rr_intervals.first.to_f / 1000).round(3)}\n"
+  rr.rr_intervals.each do |i|
+    i = i.to_f / 1000
+    time += i
+    result << "#{time.round(3)} #{i.round(3)}\n"
+  end
+  result
 end
 
+puts "Converting Polar RR recording result in '#{dir}' to TXT format as '#{output_file}'..."
 parsed = PolarDataParser.parse_rr_recording_result(dir)
 if parsed.key?(:result) && parsed.key?(:rr)
-  output_test(parsed)
+  File.open(output_file, 'w') do |f|
+    f << output_txt(parsed)
+  end
+  puts "Done"
 else
-  puts "Error: couldn't find RR record result"
+  puts "Error: couldn't find RR recording result"
 end
