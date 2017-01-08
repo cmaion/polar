@@ -6,7 +6,7 @@ A set of command line tools written in Ruby to interact with Polar watches and d
   * download raw files
   * backup complete content
 * `polar_dailysummary2txt`: convert raw polar daily summary to TXT format
-* `polar_activitysamples2csv`: convert raw polar daily activity samples (activity, steps, metabolic equivalent and sport id) to CSV format
+* `polar_activitysamples2csv`: convert raw polar daily activity samples (activity, steps, metabolic equivalent, sport id and inactivity notifications) to CSV format
 * `polar_training2sml`: convert raw polar training sessions data files to the Suuntu SML file format
 * `polar_rrrecord2txt`: displays content of RR recording results and exports to TXT file (V800)
 
@@ -175,31 +175,31 @@ $ polar_activitysamples2csv <path/to/raw/polar/daily_activity_samples> [<output_
 $ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
 $ polar_activitysamples2csv ~/Polar/<device_id>/U/0/<YYYYMMDD>/ACT/ /tmp/daily.csv
 $ cat /tmp/daily.csv
-Time,Activity,Steps,Metabolic equivalent,Sport
+Time,Activity,Steps,Metabolic equivalent,Sport,Inactivity notification
 [...]
-YYYY-MM-DD 09:53:00 +0100,SEDENTARY,2,1.25,-1
-YYYY-MM-DD 09:53:30 +0100,SEDENTARY,,1.5,-1
-YYYY-MM-DD 09:54:00 +0100,LIGHT,20,1.75,-1
-YYYY-MM-DD 09:54:30 +0100,LIGHT,,2.0,-1
-YYYY-MM-DD 09:55:00 +0100,LIGHT,22,2.75,-1
-YYYY-MM-DD 09:55:30 +0100,LIGHT,,2.375,-1
-YYYY-MM-DD 09:56:00 +0100,LIGHT,20,2.625,-1
-YYYY-MM-DD 09:56:30 +0100,LIGHT,,2.375,-1
-YYYY-MM-DD 09:57:00 +0100,LIGHT,28,2.25,-1
-YYYY-MM-DD 09:57:30 +0100,LIGHT,,2.25,-1
-YYYY-MM-DD 09:58:00 +0100,INTERMITTENT_VIGOROUS,108,3.125,-1
-YYYY-MM-DD 09:58:30 +0100,INTERMITTENT_VIGOROUS,,10.25,1
-YYYY-MM-DD 09:59:00 +0100,INTERMITTENT_VIGOROUS,85,9.75,1
-YYYY-MM-DD 09:59:30 +0100,INTERMITTENT_VIGOROUS,,9.0,1
-YYYY-MM-DD 10:00:00 +0100,INTERMITTENT_VIGOROUS,100,9.75,1
-YYYY-MM-DD 10:00:30 +0100,INTERMITTENT_VIGOROUS,,10.375,1
-YYYY-MM-DD 10:01:00 +0100,INTERMITTENT_VIGOROUS,100,10.25,1
-YYYY-MM-DD 10:01:30 +0100,INTERMITTENT_VIGOROUS,,10.0,1
-YYYY-MM-DD 10:02:00 +0100,INTERMITTENT_VIGOROUS,89,9.75,1
-YYYY-MM-DD 10:02:30 +0100,INTERMITTENT_VIGOROUS,,10.5,1
-YYYY-MM-DD 10:03:00 +0100,CONTINUOUS_VIGOROUS,85,10.625,1
-YYYY-MM-DD 10:03:30 +0100,CONTINUOUS_VIGOROUS,,10.375,1
-YYYY-MM-DD 10:04:00 +0100,CONTINUOUS_VIGOROUS,87,10.25,1
+YYYY-MM-DD 09:53:00 +0100,SEDENTARY,2,1.25,-1,
+YYYY-MM-DD 09:53:30 +0100,SEDENTARY,,1.5,-1,
+YYYY-MM-DD 09:54:00 +0100,LIGHT,20,1.75,-1,
+YYYY-MM-DD 09:54:30 +0100,LIGHT,,2.0,-1,
+YYYY-MM-DD 09:55:00 +0100,LIGHT,22,2.75,-1,
+YYYY-MM-DD 09:55:30 +0100,LIGHT,,2.375,-1,
+YYYY-MM-DD 09:56:00 +0100,LIGHT,20,2.625,-1,
+YYYY-MM-DD 09:56:30 +0100,LIGHT,,2.375,-1,
+YYYY-MM-DD 09:57:00 +0100,LIGHT,28,2.25,-1,
+YYYY-MM-DD 09:57:30 +0100,LIGHT,,2.25,-1,
+YYYY-MM-DD 09:58:00 +0100,INTERMITTENT_VIGOROUS,108,3.125,-1,
+YYYY-MM-DD 09:58:30 +0100,INTERMITTENT_VIGOROUS,,10.25,1,
+YYYY-MM-DD 09:59:00 +0100,INTERMITTENT_VIGOROUS,85,9.75,1,
+YYYY-MM-DD 09:59:30 +0100,INTERMITTENT_VIGOROUS,,9.0,1,
+YYYY-MM-DD 10:00:00 +0100,INTERMITTENT_VIGOROUS,100,9.75,1,
+YYYY-MM-DD 10:00:30 +0100,INTERMITTENT_VIGOROUS,,10.375,1,
+YYYY-MM-DD 10:01:00 +0100,INTERMITTENT_VIGOROUS,100,10.25,1,
+YYYY-MM-DD 10:01:30 +0100,INTERMITTENT_VIGOROUS,,10.0,1,
+YYYY-MM-DD 10:02:00 +0100,INTERMITTENT_VIGOROUS,89,9.75,1,
+YYYY-MM-DD 10:02:30 +0100,INTERMITTENT_VIGOROUS,,10.5,1,
+YYYY-MM-DD 10:03:00 +0100,CONTINUOUS_VIGOROUS,85,10.625,1,
+YYYY-MM-DD 10:03:30 +0100,CONTINUOUS_VIGOROUS,,10.375,1,
+YYYY-MM-DD 10:04:00 +0100,CONTINUOUS_VIGOROUS,87,10.25,1,
 [...]
 ```
 

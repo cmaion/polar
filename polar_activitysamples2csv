@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Parses RAW Polar activity samples data files (activity type, steps, metabolic equivalent, and sport id through the day) and convert to CSV
+# Parses RAW Polar activity samples data files (activity type, steps, metabolic equivalent, sport id and inactivity notifications through the day) and convert to CSV
 
 require "#{File.dirname(__FILE__)}/lib/polar_data_parser"
 
@@ -54,8 +54,16 @@ def output_csv(parsed)
     result[ts][:sport] = sport.sport_profile_id
   end
 
+  # Inactivity
+  samples.inactivity_trigger.each do |inactivity|
+    ts = DateTime.new(inactivity.time_stamp.date.year, inactivity.time_stamp.date.month, inactivity.time_stamp.date.day, inactivity.time_stamp.time.hour, inactivity.time_stamp.time.minute, inactivity.time_stamp.time.seconds, "%+i" % (inactivity.time_stamp.time_zone_offset / 60)).to_time
+
+    result[ts] ||= {}
+    result[ts][:inactivity] = true
+  end
+
   # Result
-  buffer = "Time,Activity,Steps,Metabolic equivalent,Sport\n"
+  buffer = "Time,Activity,Steps,Metabolic equivalent,Sport,Inactivity notification\n"
   no_sport = (1<<64)-1
   sport = no_sport
   activity_name = ''
@@ -68,7 +76,7 @@ def output_csv(parsed)
       sport = r[:sport]
     end
 
-    buffer << "#{ts},#{activity_name},#{r[:steps]},#{r[:met]},#{sport == no_sport ? -1 : sport}\n" if r.key?(:step) || r.key?(:met)
+    buffer << "#{ts},#{activity_name},#{r[:steps]},#{r[:met]},#{sport == no_sport ? -1 : sport},#{r[:inactivity]}\n" if r.key?(:step) || r.key?(:met)
   end
 
   buffer
