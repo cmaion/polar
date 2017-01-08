@@ -15,6 +15,7 @@ require "#{File.dirname(__FILE__)}/protobuf/exercise_route.pb"
 require "#{File.dirname(__FILE__)}/protobuf/rr_recordtestresult.pb"
 require "#{File.dirname(__FILE__)}/protobuf/dailysummary.pb"
 require "#{File.dirname(__FILE__)}/protobuf/act_samples.pb"
+require "#{File.dirname(__FILE__)}/protobuf/recovery_times.pb"
 
 module PolarDataParser
   def self.parse_training_session(dir)
@@ -93,6 +94,18 @@ module PolarDataParser
 
     if file = files_in_dir.select { |f| f == 'ASAMPL0.BPB' }.first
       parsed[:samples] = PolarData::PbActivitySamples.parse(File.open(File.join(dir, file), 'rb').read)
+    end
+
+    parsed
+  end
+
+  def self.parse_recovery_times(dir)
+    parsed = {}
+
+    files_in_dir = Dir.glob("#{dir}/*").map { |f| f.sub(/^#{dir}\//, '') }
+
+    if file = files_in_dir.select { |f| f == 'RECOVS.BPB' }.first
+      parsed[:recovery] = PolarData::PbRecoveryTimes.parse(File.open(File.join(dir, file), 'rb').read)
     end
 
     parsed

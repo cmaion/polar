@@ -1,8 +1,9 @@
 package polar_data;
+import "types.proto";
 
 message PbRecoveryTimes {
 	required .PbLocalDateTime start_of_times = 1 ;
-	repeated float recovery_times = 2 ;
+	repeated float recovery_times = 2 [packed=true];
 	optional float end_glycogen_left_percent = 3 ;
 	optional float end_carbo_consumption = 4 ;
 	optional float end_protein_consumption = 5 ;
