@@ -67,22 +67,27 @@ class PolarFtp
 
             up2date = local_file_size == entry.size
 
-            if up2date && remote_dir =~ /\/DSUM\/$/
-              # Daily summary size doesn't change, but content may.
-              # So we inspect our local copy of the daily summary, and if we
-              # have less than 24 hours recorded there, download again.
-              parsed = PolarDataParser.parse_daily_summary(local_dir)
-              if summary = parsed[:summary]
-                total_recorded_activity =
-                  pb_duration_to_float(summary.activity_class_times.time_non_wear) +
-                  pb_duration_to_float(summary.activity_class_times.time_sleep) +
-                  pb_duration_to_float(summary.activity_class_times.time_sedentary) +
-                  pb_duration_to_float(summary.activity_class_times.time_light_activity) +
-                  pb_duration_to_float(summary.activity_class_times.time_continuous_moderate) +
-                  pb_duration_to_float(summary.activity_class_times.time_intermittent_moderate) +
-                  pb_duration_to_float(summary.activity_class_times.time_continuous_vigorous) +
-                  pb_duration_to_float(summary.activity_class_times.time_intermittent_vigorous)
-                up2date = total_recorded_activity >= 24*3600
+            if up2date
+              if remote_dir =~ /\/DSUM\/$/
+                # Daily summary size doesn't change, but content may.
+                # So we inspect our local copy of the daily summary, and if we
+                # have less than 24 hours recorded there, download again.
+                parsed = PolarDataParser.parse_daily_summary(local_dir)
+                if summary = parsed[:summary]
+                  total_recorded_activity =
+                    pb_duration_to_float(summary.activity_class_times.time_non_wear) +
+                    pb_duration_to_float(summary.activity_class_times.time_sleep) +
+                    pb_duration_to_float(summary.activity_class_times.time_sedentary) +
+                    pb_duration_to_float(summary.activity_class_times.time_light_activity) +
+                    pb_duration_to_float(summary.activity_class_times.time_continuous_moderate) +
+                    pb_duration_to_float(summary.activity_class_times.time_intermittent_moderate) +
+                    pb_duration_to_float(summary.activity_class_times.time_continuous_vigorous) +
+                    pb_duration_to_float(summary.activity_class_times.time_intermittent_vigorous)
+                  up2date = total_recorded_activity >= 24*3600
+                end
+              elsif remote_dir =~ /^\/U\/[0-9]*\/(S|TL)\/$/
+                # Always fetch newest files
+                up2date = false
               end
             end
 
