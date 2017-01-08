@@ -1,0 +1,103 @@
+#!/usr/bin/env ruby
+# Parses RAW Polar daily summary data file and convert to TXT
+
+require "#{File.dirname(__FILE__)}/lib/polar_data_parser"
+
+def usage
+  puts "Usage:"
+  puts "  #{__FILE__} <directory> [<txt file>]"
+end
+
+dir = ARGV[0]
+unless dir
+  usage
+  exit -2
+end
+
+output_file = ARGV[1] || File.join(dir, 'output.txt')
+
+def pb_duration_to_string duration
+  "#{"%02i" % duration.hours}:#{"%02i" % duration.minutes}:#{"%02i" % duration.seconds}.#{"%03i" % duration.millis}"
+end
+
+def pb_duration_to_float duration
+  duration.hours.to_f * 3600 + duration.minutes * 60 + duration.seconds + duration.millis.to_f / 1000
+end
+
+def pb_date_to_string date
+  "#{"%02i" % date.day}/#{"%02i" % date.month}/#{"%04i" % date.year}"
+end
+
+def output_txt(parsed)
+  summary = parsed[:summary]
+  buffer = ""
+
+  total_recorded_activity =
+    pb_duration_to_float(summary.activity_class_times.time_non_wear) +
+    pb_duration_to_float(summary.activity_class_times.time_sleep) +
+    pb_duration_to_float(summary.activity_class_times.time_sedentary) +
+    pb_duration_to_float(summary.activity_class_times.time_light_activity) +
+    pb_duration_to_float(summary.activity_class_times.time_continuous_moderate) +
+    pb_duration_to_float(summary.activity_class_times.time_intermittent_moderate) +
+    pb_duration_to_float(summary.activity_class_times.time_continuous_vigorous) +
+    pb_duration_to_float(summary.activity_class_times.time_intermittent_vigorous)
+  total_recorded_activity_hours = (total_recorded_activity / 3600).floor
+  total_recorded_activity_minutes = ((total_recorded_activity - 3600 * total_recorded_activity_hours) / 60).floor
+  total_recorded_activity_seconds = (total_recorded_activity - 3600 * total_recorded_activity_hours - 60 * total_recorded_activity_minutes)
+  total_recorded_activity_string = "#{"%02i" % total_recorded_activity_hours}:#{"%02i" % total_recorded_activity_minutes}:#{"%02i" % total_recorded_activity_seconds.round}"
+
+  active_recorded_activity =
+    pb_duration_to_float(summary.activity_class_times.time_light_activity) +
+    pb_duration_to_float(summary.activity_class_times.time_continuous_moderate) +
+    pb_duration_to_float(summary.activity_class_times.time_intermittent_moderate) +
+    pb_duration_to_float(summary.activity_class_times.time_continuous_vigorous) +
+    pb_duration_to_float(summary.activity_class_times.time_intermittent_vigorous)
+  active_recorded_activity_hours = (active_recorded_activity / 3600).floor
+  active_recorded_activity_minutes = ((active_recorded_activity - 3600 * active_recorded_activity_hours) / 60).floor
+  active_recorded_activity_seconds = (active_recorded_activity - 3600 * active_recorded_activity_hours - 60 * active_recorded_activity_minutes)
+  active_recorded_activity_string = "#{"%02i" % active_recorded_activity_hours}:#{"%02i" % active_recorded_activity_minutes}:#{"%02i" % active_recorded_activity_seconds.round}"
+
+  buffer << "Date                                : #{pb_date_to_string summary.date}\n"
+
+  buffer << "Recorded activity                   : #{total_recorded_activity_string}\n"
+  if total_recorded_activity < 24*3600
+    puts "WARNING: this is not a full day summary. We only have #{total_recorded_activity_string} worth of data!"
+  end
+
+  buffer << "Steps                               : #{summary.steps}\n"
+  buffer << "Distance                            : #{"%.0f" % summary.activity_distance} m\n"
+  buffer << "\n"
+  buffer << "BMR      calories                   : #{"%4i" % summary.bmr_calories} kcal\n"
+  buffer << "Activity calories                   : #{"%4i" % summary.activity_calories} kcal\n"
+  buffer << "Training calories                   : #{"%4i" % summary.training_calories} kcal\n"
+  buffer << "TOTAL    calories                   : #{"%4i" % (summary.bmr_calories + summary.activity_calories + summary.training_calories)} kcal\n"
+
+  buffer << "\n"
+  buffer << "Activity NON_WEAR                   : #{pb_duration_to_string summary.activity_class_times.time_non_wear}\n"
+  buffer << "Activity SLEEP                      : #{pb_duration_to_string summary.activity_class_times.time_sleep}\n"
+  buffer << "Activity SEDENTARY                  : #{pb_duration_to_string summary.activity_class_times.time_sedentary}\n"
+  buffer << "Activity LIGHT                      : #{pb_duration_to_string summary.activity_class_times.time_light_activity}\n"
+  buffer << "Activity CONTINUOUS_MODERATE        : #{pb_duration_to_string summary.activity_class_times.time_continuous_moderate}\n"
+  buffer << "Activity INTERMITTENT_MODERATE      : #{pb_duration_to_string summary.activity_class_times.time_intermittent_moderate}\n"
+  buffer << "Activity CONTINUOUS_VIGOROUS        : #{pb_duration_to_string summary.activity_class_times.time_continuous_vigorous}\n"
+  buffer << "Activity INTERMITTENT_VIGOROUS      : #{pb_duration_to_string summary.activity_class_times.time_intermittent_vigorous}\n"
+  buffer << "TOTAL activity time                 : #{active_recorded_activity_string}\n"
+
+  buffer << "\n"
+  buffer << "Activity goal                       : #{"%3i" % (summary.activity_goal_summary.achieved_activity*100/summary.activity_goal_summary.activity_goal).round}% (#{"%.1f" % summary.activity_goal_summary.achieved_activity}/#{"%.1f" % summary.activity_goal_summary.activity_goal})\n"
+  buffer << "Activity goal (time to go, standing): #{pb_duration_to_string summary.activity_goal_summary.time_to_go_up}\n"
+  buffer << "Activity goal (time to go, walking) : #{pb_duration_to_string summary.activity_goal_summary.time_to_go_walk}\n"
+  buffer << "Activity goal (time to go, running) : #{pb_duration_to_string summary.activity_goal_summary.time_to_go_jog}\n"
+  buffer
+end
+
+puts "Converting Polar daily summary in '#{dir}' to TXT format as '#{output_file}'..."
+parsed = PolarDataParser.parse_daily_summary(dir)
+if parsed.key?(:summary)
+  File.open(output_file, 'w') do |f|
+    f << output_txt(parsed)
+  end
+  puts "Done"
+else
+  puts "Error: couldn't find daily summary"
+end

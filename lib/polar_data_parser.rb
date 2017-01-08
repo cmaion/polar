@@ -13,6 +13,7 @@ require "#{File.dirname(__FILE__)}/protobuf/exercise_rr_samples.pb"
 require "#{File.dirname(__FILE__)}/protobuf/exercise_samples.pb"
 require "#{File.dirname(__FILE__)}/protobuf/exercise_route.pb"
 require "#{File.dirname(__FILE__)}/protobuf/rr_recordtestresult.pb"
+require "#{File.dirname(__FILE__)}/protobuf/dailysummary.pb"
 require "#{File.dirname(__FILE__)}/protobuf/act_samples.pb"
 
 module PolarDataParser
@@ -68,6 +69,18 @@ module PolarDataParser
 
     if file = files_in_dir.select { |f| f == 'RR.GZB' }.first
       parsed[:rr] = PolarData::PbExerciseRRIntervals.parse(Zlib::GzipReader.new(File.open(File.join(dir, file), 'rb')).read)
+    end
+
+    parsed
+  end
+
+  def self.parse_daily_summary(dir)
+    parsed = {}
+
+    files_in_dir = Dir.glob("#{dir}/*").map { |f| f.sub(/^#{dir}\//, '') }
+
+    if file = files_in_dir.select { |f| f == 'DSUM.BPB' }.first
+      parsed[:summary] = PolarData::PbDailySummary.parse(File.open(File.join(dir, file), 'rb').read)
     end
 
     parsed

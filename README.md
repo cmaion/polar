@@ -5,6 +5,7 @@ A set of command line tools written in Ruby to interact with Polar watches and d
   * list content on the Polar watch
   * download raw files
   * backup complete content
+* `polar_dailysummary2txt`: convert raw polar daily summary to TXT format
 * `polar_activitysamples2csv`: convert raw polar daily activity samples (activity, steps, metabolic equivalent and sport id) to CSV format
 * `polar_training2sml`: convert raw polar training sessions data files to the Suuntu SML file format
 * `polar_rrrecord2txt`: displays content of RR recording results and exports to TXT file (V800)
@@ -126,6 +127,42 @@ Downloading '/U/0/<YYYYMMDD>/E/<training_session_id>/00/SAMPLES.GZB' as 'SAMPLES
 
 $ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
 [...]
+```
+
+
+Convert daily summary to TXT file:
+
+```sh
+$ polar_dailysummary2txt <path/to/raw/polar/daily_summary> [<output_txt_file>]
+
+# Example:
+$ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
+$ polar_dailysummary2txt ~/Polar/<device_id>/U/0/<YYYYMMDD>/DSUM/ /tmp/daily.txt
+$ cat /tmp/daily.txt
+Date                                : DD/MM/YYYY
+Recorded activity                   : 24:00:00
+Steps                               : 12000
+Distance                            : 6841 m
+
+BMR      calories                   : 1755 kcal
+Activity calories                   :  427 kcal
+Training calories                   : 1118 kcal
+TOTAL    calories                   : 3300 kcal
+
+Activity NON_WEAR                   : 01:27:00.000
+Activity SLEEP                      : 08:41:30.000
+Activity SEDENTARY                  : 08:43:00.000
+Activity LIGHT                      : 03:27:00.000
+Activity CONTINUOUS_MODERATE        : 00:00:00.000
+Activity INTERMITTENT_MODERATE      : 00:03:30.000
+Activity CONTINUOUS_VIGOROUS        : 01:22:00.000
+Activity INTERMITTENT_VIGOROUS      : 00:16:00.000
+TOTAL activity time                 : 05:08:30
+
+Activity goal                       : 291% (926.8/318.0)
+Activity goal (time to go, standing): 00:00:00.000
+Activity goal (time to go, walking) : 00:00:00.000
+Activity goal (time to go, running) : 00:00:00.000
 ```
 
 

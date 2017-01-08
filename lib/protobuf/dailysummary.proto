@@ -1,4 +1,5 @@
 package polar_data;
+import "types.proto";
 
 message PbActivityGoalSummary {
 	required float activity_goal = 1 ;
