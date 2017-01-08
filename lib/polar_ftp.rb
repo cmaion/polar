@@ -1,5 +1,6 @@
 require 'fileutils'
 require "#{File.dirname(__FILE__)}/polar_usb"
+require "#{File.dirname(__FILE__)}/polar_data_parser"
 require "#{File.dirname(__FILE__)}/protobuf/types.pb"
 require "#{File.dirname(__FILE__)}/protobuf/structures.pb"
 require "#{File.dirname(__FILE__)}/protobuf/pftp_request.pb"
@@ -63,7 +64,29 @@ class PolarFtp
             local_dir = local_dir_root + remote_dir
             local_file = local_dir + entry.name
             local_file_size = File.size(local_file) rescue -1
-            if local_file_size != entry.size
+
+            up2date = local_file_size == entry.size
+
+            if up2date && remote_dir =~ /\/DSUM\/$/
+              # Daily summary size doesn't change, but content may.
+              # So we inspect our local copy of the daily summary, and if we
+              # have less than 24 hours recorded there, download again.
+              parsed = PolarDataParser.parse_daily_summary(local_dir)
+              if summary = parsed[:summary]
+                total_recorded_activity =
+                  pb_duration_to_float(summary.activity_class_times.time_non_wear) +
+                  pb_duration_to_float(summary.activity_class_times.time_sleep) +
+                  pb_duration_to_float(summary.activity_class_times.time_sedentary) +
+                  pb_duration_to_float(summary.activity_class_times.time_light_activity) +
+                  pb_duration_to_float(summary.activity_class_times.time_continuous_moderate) +
+                  pb_duration_to_float(summary.activity_class_times.time_intermittent_moderate) +
+                  pb_duration_to_float(summary.activity_class_times.time_continuous_vigorous) +
+                  pb_duration_to_float(summary.activity_class_times.time_intermittent_vigorous)
+                up2date = total_recorded_activity >= 24*3600
+              end
+            end
+
+            unless up2date
               FileUtils.mkdir_p(local_dir)
               self.get(remote_dir + entry.name, local_file)
             end
