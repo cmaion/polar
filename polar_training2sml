@@ -17,18 +17,6 @@ end
 
 output_file = ARGV[1] || File.join(dir, 'output.sml')
 
-def min_per_km_2_m_per_s(val)
-  val == 0 ? 0 : 1000.0 / (val * 60)
-end
-
-def kcal2joules(val)
-  val * 4186.8
-end
-
-def degree2radian(deg)
-  deg.to_f * Math::PI / 180.0
-end
-
 def output_sml(parsed)
   sport = parsed[:sport]
   training_session = parsed[:training_session]

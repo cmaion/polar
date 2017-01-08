@@ -14,10 +14,6 @@ unless dir
   exit -2
 end
 
-def pb_duration_to_string duration
-  "#{"%02i" % duration.hours}:#{"%02i" % duration.minutes}:#{"%02i" % duration.seconds}.#{"%03i" % duration.millis}"
-end
-
 def output_test(parsed)
   sport = parsed[:sport]
   training_session = parsed[:training_session]

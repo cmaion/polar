@@ -16,18 +16,6 @@ end
 
 output_file = ARGV[1] || File.join(dir, 'output.txt')
 
-def pb_duration_to_string duration
-  "#{"%02i" % duration.hours}:#{"%02i" % duration.minutes}:#{"%02i" % duration.seconds}.#{"%03i" % duration.millis}"
-end
-
-def pb_duration_to_float duration
-  duration.hours.to_f * 3600 + duration.minutes * 60 + duration.seconds + duration.millis.to_f / 1000
-end
-
-def pb_date_to_string date
-  "#{"%02i" % date.day}/#{"%02i" % date.month}/#{"%04i" % date.year}"
-end
-
 def output_txt(parsed)
   summary = parsed[:summary]
   buffer = ""

@@ -98,3 +98,28 @@ module PolarDataParser
     parsed
   end
 end
+
+def pb_duration_to_string duration
+  "#{"%02i" % duration.hours}:#{"%02i" % duration.minutes}:#{"%02i" % duration.seconds}.#{"%03i" % duration.millis}"
+end
+
+def pb_duration_to_float duration
+  duration.hours.to_f * 3600 + duration.minutes * 60 + duration.seconds + duration.millis.to_f / 1000
+end
+
+def pb_date_to_string date
+  "#{"%02i" % date.day}/#{"%02i" % date.month}/#{"%04i" % date.year}"
+end
+
+def min_per_km_2_m_per_s(val)
+  val == 0 ? 0 : 1000.0 / (val * 60)
+end
+
+def kcal2joules(val)
+  val * 4186.8
+end
+
+def degree2radian(deg)
+  deg.to_f * Math::PI / 180.0
+end
+
