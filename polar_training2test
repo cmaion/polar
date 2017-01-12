@@ -55,7 +55,7 @@ def output_test(parsed)
   end
 
   if route_samples_count > 0
-    puts "GPX first fix: #{DateTime.new(route_samples.first_location_time.date.year, route_samples.first_location_time.date.month, route_samples.first_location_time.date.day, route_samples.first_location_time.time.hour, route_samples.first_location_time.time.minute, route_samples.first_location_time.time.seconds, '+0').to_s}"
+    puts "GPX first fix: #{pb_sysdatetime_to_string route_samples.first_location_time}"
     for i in 0..route_samples_count-1
       timestamp = Time.at(route_samples.duration[i].to_f / 1000).utc
       puts "#{timestamp.strftime("%H:%M:%S")}, latitude=#{route_samples.latitude[i]}, longitude=#{route_samples.longitude[i]}, gps_altitude=#{route_samples.gps_altitude[i]}, satellites=#{route_samples.satellite_amount[i]}"

@@ -1,4 +1,5 @@
 package polar_data;
+import "types.proto";
 
 message PbUserBirthday {
 	required .PbDate value = 1 ;
@@ -8,7 +9,7 @@ message PbUserBirthday {
 message PbUserGender {
 	required .polar_data.PbUserGender.Gender value = 1 ;
 	required .PbSystemDateTime last_modified = 2 ;
-	
+
 	enum Gender {
 		MALE = 1;
 		FEMALE = 2;
@@ -19,7 +20,7 @@ message PbUserHrAttribute {
 	required uint32 value = 1 ;
 	required .PbSystemDateTime last_modified = 2 ;
 	optional .polar_data.PbUserHrAttribute.HrSettingSource setting_source = 3 ;
-	
+
 	enum HrSettingSource {
 		SOURCE_DEFAULT = 0;
 		SOURCE_AGE_BASED = 1;
@@ -33,7 +34,7 @@ message PbUserWeight {
 	required float value = 1 ;
 	required .PbSystemDateTime last_modified = 2 ;
 	optional .polar_data.PbUserWeight.WeightSettingSource setting_source = 3 ;
-	
+
 	enum WeightSettingSource {
 		SOURCE_DEFAULT = 0;
 		SOURCE_USER = 2;
@@ -50,7 +51,7 @@ message PbUserVo2Max {
 	required uint32 value = 1 ;
 	required .PbSystemDateTime last_modified = 2 ;
 	optional .polar_data.PbUserVo2Max.Vo2MaxSettingSource setting_source = 3 ;
-	
+
 	enum Vo2MaxSettingSource {
 		SOURCE_DEFAULT = 0;
 		SOURCE_ESTIMATE = 1;
@@ -62,7 +63,7 @@ message PbUserVo2Max {
 message PbUserTrainingBackground {
 	required .polar_data.PbUserTrainingBackground.TrainingBackground value = 1 ;
 	required .PbSystemDateTime last_modified = 2 ;
-	
+
 	enum TrainingBackground {
 		OCCASIONAL = 10;
 		REGULAR = 20;
@@ -76,7 +77,7 @@ message PbUserTrainingBackground {
 message PbUserTypicalDay {
 	required .polar_data.PbUserTypicalDay.TypicalDay value = 1 ;
 	required .PbSystemDateTime last_modified = 2 ;
-	
+
 	enum TypicalDay {
 		MOSTLY_SITTING = 1;
 		MOSTLY_STANDING = 2;
@@ -98,7 +99,7 @@ message PbUserFunctionalThresholdPower {
 	required uint32 value = 1 ;
 	required .PbSystemDateTime last_modified = 2 ;
 	optional .polar_data.PbUserFunctionalThresholdPower.FTPSettingSource setting_source = 3 ;
-	
+
 	enum FTPSettingSource {
 		SOURCE_DEFAULT = 0;
 		SOURCE_ESTIMATE = 1;

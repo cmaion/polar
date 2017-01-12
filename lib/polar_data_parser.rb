@@ -3,6 +3,7 @@ require 'zlib'
 
 require "#{File.dirname(__FILE__)}/protobuf/types.pb"
 require "#{File.dirname(__FILE__)}/protobuf/structures.pb"
+require "#{File.dirname(__FILE__)}/protobuf/user_physdata.pb"
 require "#{File.dirname(__FILE__)}/protobuf/exercise_sensors.pb"
 require "#{File.dirname(__FILE__)}/protobuf/sport.pb"
 require "#{File.dirname(__FILE__)}/protobuf/training_session.pb"
@@ -18,6 +19,18 @@ require "#{File.dirname(__FILE__)}/protobuf/act_samples.pb"
 require "#{File.dirname(__FILE__)}/protobuf/recovery_times.pb"
 
 module PolarDataParser
+  def self.parse_user_physdata(dir)
+    parsed = {}
+
+    files_in_dir = Dir.glob("#{dir}/*").map { |f| f.sub(/^#{dir}\//, '') }
+
+    if file = files_in_dir.select { |f| f == 'PHYSDATA.BPB' }.first
+      parsed[:phys] = PolarData::PbUserPhysData.parse(File.open(File.join(dir, file), 'rb').read)
+    end
+
+    parsed
+  end
+
   def self.parse_training_session(dir)
     parsed = {}
 
@@ -110,6 +123,10 @@ module PolarDataParser
 
     parsed
   end
+end
+
+def pb_sysdatetime_to_string sysdatetime
+  sysdatetime.date.year > 0 ? DateTime.new(sysdatetime.date.year, sysdatetime.date.month, sysdatetime.date.day, sysdatetime.time.hour, sysdatetime.time.minute, sysdatetime.time.seconds, '+0').to_time.to_s : 'N/D'
 end
 
 def pb_duration_to_string duration
