@@ -1,0 +1,52 @@
+#!/usr/bin/env ruby
+# Parses RAW Polar daily recovery data file and convert to TXT
+
+require "#{File.dirname(__FILE__)}/lib/polar_data_parser"
+
+def usage
+  puts "Usage:"
+  puts "  #{__FILE__} <directory> [<txt file>]"
+end
+
+dir = ARGV[0]
+unless dir
+  usage
+  exit -2
+end
+
+output_file = ARGV[1] || File.join(dir, 'output.txt')
+
+def output_txt(parsed)
+  recovery = parsed[:recovery]
+
+  start_of_times = DateTime.new(recovery.start_of_times.date.year, recovery.start_of_times.date.month, recovery.start_of_times.date.day, recovery.start_of_times.time.hour, recovery.start_of_times.time.minute, recovery.start_of_times.time.seconds, "%+i" % (recovery.start_of_times.time_zone_offset / 60)).to_time
+
+  buffer = ""
+
+	buffer << "Start of times                    : #{start_of_times}\n"
+	buffer << "Recovery times                    : #{recovery.recovery_times.join(', ')}\n"
+	buffer << "End glygogen left                 : #{recovery.end_glycogen_left_percent}%\n"
+  buffer << "End carbo consumption             : #{recovery.end_carbo_consumption}%\n"
+  buffer << "End protein consumption           : #{recovery.end_protein_consumption}%\n"
+  buffer << "End cumulative mechanical stimulus: #{recovery.end_cumulative_mechanical_stimulus}\n"
+  buffer << "Last 1/2 hour average MET         : #{recovery.last_half_hour_avg_met}\n"
+  buffer << "Exercise calories                 : #{"%4i" % recovery.exercise_calories.round} kcal\n"
+  buffer << "Activity calories                 : #{"%4i" % recovery.activity_calories.round} kcal\n"
+  buffer << "BMR      calories                 : #{"%4i" % recovery.bmr_calories.round} kcal\n"
+  buffer << "Steps                             : #{recovery.steps}\n"
+  buffer << "Accumulated activity              : #{recovery.accumulated_activity}\n"
+  buffer << "Number of exercise 1/2 hours      : #{recovery.number_of_exercise_half_hours}\n"
+
+  buffer
+end
+
+puts "Converting Polar recovery times in '#{dir}' to TXT format as '#{output_file}'..."
+parsed = PolarDataParser.parse_recovery_times(dir)
+if parsed.key?(:recovery)
+  File.open(output_file, 'w') do |f|
+    f << output_txt(parsed)
+  end
+  puts "Done"
+else
+  puts "Error: couldn't find recovery times"
+end
