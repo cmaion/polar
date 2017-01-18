@@ -1,0 +1,9 @@
+package polar_data;
+import "types.proto";
+
+message PbFitnessTestResult {
+	required .PbLocalDateTime start_time = 1 ;
+	required uint32 fitness = 2 ;
+	required uint32 unknonw = 3 ; /* some type or level, te be confirmed. 7 would be "Elite" */
+	required uint32 hr_avg = 4 ;  /* not sure -- to be confirmed */
+}

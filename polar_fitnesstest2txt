@@ -1,0 +1,75 @@
+#!/usr/bin/env ruby
+# Converts RAW Polar fitness result data files in txt file format
+
+require "#{File.dirname(__FILE__)}/lib/polar_data_parser"
+
+def usage
+  puts "Usage:"
+  puts "  #{__FILE__} <directory> [<txt file>]"
+end
+
+dir = ARGV[0]
+unless dir
+  usage
+  exit -2
+end
+
+output_file = ARGV[1] || File.join(dir, 'output.txt')
+
+def output_txt(parsed)
+  result = parsed[:result]
+  rr = parsed[:rr]
+  samples = parsed[:samples]
+
+  start_time = DateTime.new(result.start_time.date.year, result.start_time.date.month, result.start_time.date.day, result.start_time.time.hour, result.start_time.time.minute, result.start_time.time.seconds, "%+i" % (result.start_time.time_zone_offset / 60)).to_time
+  buffer = "Started: #{start_time}\n"
+
+  buffer << "Fitness test result: #{result.fitness}\n"
+
+  samples_count = samples.heart_rate_samples.count
+  recording_interval = samples.recording_interval.hours * 3600 + samples.recording_interval.minutes * 60 + samples.recording_interval.seconds + (samples.recording_interval.millis.to_f / 1000)
+  timestamp = Time.at(0).utc
+  hr_count = 0
+  hr_sum = 0
+  hr_min = 9999
+  hr_max = -1
+  hr_result = "HR:\n"
+  for i in 0..samples_count-1
+    timestamp += recording_interval
+    hr_result << "#{timestamp.strftime("%H:%M:%S")}: #{"%3.0f" % samples.heart_rate_samples[i]} bpm\n" if samples.heart_rate_samples[i]
+    if samples.heart_rate_samples[i] > 0
+      hr_count += 1
+      hr_sum += samples.heart_rate_samples[i]
+      hr_min = samples.heart_rate_samples[i] if samples.heart_rate_samples[i] < hr_min
+      hr_max = samples.heart_rate_samples[i] if samples.heart_rate_samples[i] > hr_max
+    end
+  end
+  buffer << "HR min: #{"%3.0f" % hr_min}\n"
+  buffer << "HR avg: #{"%3.0f" % (hr_sum.to_f / hr_count)}\n"
+  buffer << "HR max: #{"%3.0f" % hr_max}\n"
+  buffer << hr_result
+
+  if rr
+    buffer << "\nRR:\n"
+    time = 0.0
+    buffer << "0.000 #{(rr.rr_intervals.first.to_f / 1000).round(3)}\n"
+    rr.rr_intervals.each do |i|
+      i = i.to_f / 1000
+      time += i
+      buffer << "#{time.round(3)} #{i.round(3)}\n"
+    end
+  end
+
+  buffer
+end
+
+puts "Converting Polar fitness test result in '#{dir}' to TXT format as '#{output_file}'..."
+parsed = PolarDataParser.parse_fitness_test_result(dir)
+if parsed.key?(:result) && parsed.key?(:samples)
+  File.open(output_file, 'w') do |f|
+    f << output_txt(parsed)
+  end
+  puts "Done"
+else
+  puts "Error: couldn't find fitness test result"
+end

@@ -13,6 +13,7 @@ require "#{File.dirname(__FILE__)}/protobuf/exercise_stats.pb"
 require "#{File.dirname(__FILE__)}/protobuf/exercise_rr_samples.pb"
 require "#{File.dirname(__FILE__)}/protobuf/exercise_samples.pb"
 require "#{File.dirname(__FILE__)}/protobuf/exercise_route.pb"
+require "#{File.dirname(__FILE__)}/protobuf/fitnesstestresult.pb"
 require "#{File.dirname(__FILE__)}/protobuf/rr_recordtestresult.pb"
 require "#{File.dirname(__FILE__)}/protobuf/dailysummary.pb"
 require "#{File.dirname(__FILE__)}/protobuf/act_samples.pb"
@@ -67,6 +68,26 @@ module PolarDataParser
 
     if route_file = files_in_dir.select { |f| f == 'ROUTE.GZB' }.first
       parsed[:route_samples] = PolarData::PbExerciseRouteSamples.parse(Zlib::GzipReader.new(File.open(File.join(dir, route_file), 'rb')).read)
+    end
+
+    parsed
+  end
+
+  def self.parse_fitness_test_result(dir)
+    parsed = {}
+
+    files_in_dir = Dir.glob("#{dir}/*").map { |f| f.sub(/^#{dir}\//, '') }
+
+    if file = files_in_dir.select { |f| f == 'FTRES.BPB' }.first
+      parsed[:result] = PolarData::PbFitnessTestResult.parse(File.open(File.join(dir, file), 'rb').read)
+    end
+
+    if samples_file = files_in_dir.select { |f| f == 'SAMPLES.GZB' }.first
+      parsed[:samples] = PolarData::PbExerciseSamples.parse(Zlib::GzipReader.new(File.open(File.join(dir, samples_file), 'rb')).read)
+    end
+
+    if file = files_in_dir.select { |f| f == 'RR.GZB' }.first
+      parsed[:rr] = PolarData::PbExerciseRRIntervals.parse(Zlib::GzipReader.new(File.open(File.join(dir, file), 'rb')).read)
     end
 
     parsed

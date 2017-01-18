@@ -9,6 +9,7 @@ A set of command line tools written in Ruby to interact with Polar watches and d
 * `polar_dailysummary2txt`: convert raw polar daily summary to TXT format
 * `polar_activitysamples2csv`: convert raw polar daily activity samples (activity, steps, metabolic equivalent, sport id and inactivity notifications) to CSV format
 * `polar_training2sml`: convert raw polar training sessions data files to the Suuntu SML file format
+* `polar_fitnesstest2txt`: displays content of fitness test result and exports to TXT file
 * `polar_rrrecord2txt`: displays content of RR recording results and exports to TXT file (V800)
 
 Tested with:
@@ -242,6 +243,17 @@ $ polar_training2sml <path/to/raw/polar/training_session_id> [<output_sml_file>]
 # Example:
 $ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
 $ polar_training2sml ~/Polar/<device_id>/U/0/<YYYYMMDD>/E/<training_session_id>/ /tmp/output.sml
+```
+
+
+Read fitness test result and convert to TXT file:
+
+```sh
+$ polar_fitnesstest2txt <path/to/raw/polar/fitness_test_result> [<output_txt_file>]
+
+# Example:
+$ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
+$ polar_fitnesstest2txt ~/Polar/<device_id>/U/0/<YYYYMMDD>/FT/<fitness_test_id>/ /tmp/output.txt
 ```
 
 
