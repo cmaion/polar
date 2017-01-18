@@ -85,6 +85,9 @@ class PolarFtp
                     pb_duration_to_float(summary.activity_class_times.time_intermittent_vigorous)
                   up2date = total_recorded_activity >= 24*3600
                 end
+              elsif remote_dir == "/" && entry.name == "SYNCINFO.BPB"
+                # Always fetch newest files
+                up2date = false
               elsif remote_dir =~ /^\/U\/[0-9]*\/(S|TL)\/$/
                 # Always fetch newest files
                 up2date = false
