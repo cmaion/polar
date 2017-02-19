@@ -46,7 +46,7 @@ def output_test(parsed)
     r = []
     r << timestamp.strftime("%H:%M:%S")
     r << "#{"%7.1f" % samples.distance_samples[i]} m" if samples.distance_samples[i]
-    r << "#{"%3.2f" % samples.speed_samples[i]} min/km" if samples.speed_samples[i]
+    r << "#{"%3.2f" % (60.0 / samples.speed_samples[i])} min/km" if samples.speed_samples[i]
     r << "FC=#{"%3.0f" % samples.heart_rate_samples[i]} bpm" if samples.heart_rate_samples[i]
     r << "alt=#{"%4.1f" % samples.altitude_samples[i]} m" if samples.altitude_samples[i]
     r << "temp=#{"%2.1f" % samples.temperature_samples[i]} °C" if samples.temperature_samples[i]
