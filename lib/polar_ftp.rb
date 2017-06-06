@@ -35,6 +35,7 @@ class PolarFtp
   def get(remote_file, output_file = nil)
     output_file ||= File.basename(remote_file)
     output_file = 'output' if output_file == '/'
+    output_file_part = "#{output_file}.part"
 
     puts "Downloading '#{remote_file}' as '#{output_file}'"
     result = @polar_cnx.request(
@@ -43,9 +44,10 @@ class PolarFtp
         :path => remote_file
       ).serialize_to_string)
 
-    File.open(output_file, 'wb') do |f|
+    File.open(output_file_part, 'wb') do |f|
       f << result
     end
+    FileUtils.mv(output_file_part, output_file)
   end
 
   def sync(local_dir_root = nil)
