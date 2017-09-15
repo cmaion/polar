@@ -9,6 +9,7 @@ A set of command line tools written in Ruby to interact with Polar watches and d
 * `polar_dailysummary2txt`: convert raw polar daily summary to TXT format
 * `polar_activitysamples2csv`: convert raw polar daily activity samples (activity, steps, metabolic equivalent, sport id and inactivity notifications) to CSV format
 * `polar_training2sml`: convert raw polar training sessions data files to the Suuntu SML file format
+* `polar_training2gpx`: convert raw polar training sessions data files to the Garmin GPX file format (track only)
 * `polar_fitnesstest2txt`: displays content of fitness test result and exports to TXT file
 * `polar_rrrecord2txt`: displays content of RR recording results and exports to TXT file (V800)
 
@@ -71,6 +72,8 @@ C:\Users\...> C:\Ruby23\bin\ruby.exe C:\path\to\this\project\directory\polar_ftp
 C:\Users\...> C:\Ruby23\bin\ruby.exe C:\path\to\this\project\directory\polar_ftp SYNC
 
 C:\Users\...> C:\Ruby23\bin\ruby.exe C:\path\to\this\project\directory\polar_training2sml C:/Users/.../Polar/<device_id>/U/0/<YYYYMMDD>/E/<training_session_id>/ /temp/output.sml
+
+C:\Users\...> C:\Ruby23\bin\ruby.exe C:\path\to\this\project\directory\polar_training2gpx C:/Users/.../Polar/<device_id>/U/0/<YYYYMMDD>/E/<training_session_id>/ /temp/output.gpx
 ```
 
 
@@ -82,7 +85,7 @@ Install the following Ruby gems:
 $ gem install ruby-protocol-buffers
 $ gem install varint   # Optional (increases ruby-protocol-buffers performance)
 $ gem install libusb   # Required by polar_ftp
-$ gem install nokogiri # Required by polar_training2sml
+$ gem install nokogiri # Required by polar_training2sml and polar_training2gpx
 ```
 
 Download this repository and put it's content wherever you want (or use `git clone https://github.com/cmaion/polar` to clone it locally).
@@ -232,6 +235,17 @@ YYYY-MM-DD 10:03:00 +0100,CONTINUOUS_VIGOROUS,85,10.625,1,
 YYYY-MM-DD 10:03:30 +0100,CONTINUOUS_VIGOROUS,,10.375,1,
 YYYY-MM-DD 10:04:00 +0100,CONTINUOUS_VIGOROUS,87,10.25,1,
 [...]
+```
+
+
+Convert a training session to Garmin GPX file:
+
+```sh
+$ polar_training2gpx <path/to/raw/polar/training_session_id> [<output_gpx_file>]
+
+# Example:
+$ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
+$ polar_training2gpx ~/Polar/<device_id>/U/0/<YYYYMMDD>/E/<training_session_id>/ /tmp/output.gpx
 ```
 
 

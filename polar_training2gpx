@@ -1,0 +1,72 @@
+#!/usr/bin/env ruby
+# Converts RAW Polar training session data files in Garmin GPX file format.
+
+require 'time'
+require 'nokogiri'
+require "#{File.dirname(__FILE__)}/lib/polar_data_parser"
+
+def usage
+  puts "Usage:"
+  puts "  #{__FILE__} <directory> [<gpx file>]"
+end
+
+dir = ARGV[0]
+unless dir
+  usage
+  exit -2
+end
+
+output_file = ARGV[1] || File.join(dir, 'output.gpx')
+
+def output_gpx(parsed)
+  #sport = parsed[:sport]
+  training_session = parsed[:training_session]
+  #sensors = parsed[:sensors]
+  samples = parsed[:samples]
+  #exercise = parsed[:exercise]
+  #laps = parsed[:exercise_laps]
+  #exercise_stats = parsed[:exercise_stats]
+  route_samples = parsed[:route_samples]
+
+  start = DateTime.new(training_session.start.date.year, training_session.start.date.month, training_session.start.date.day, training_session.start.time.hour, training_session.start.time.minute, training_session.start.time.seconds, "%+i" % (training_session.start.time_zone_offset / 60)).to_time.utc
+
+  recording_interval = samples.recording_interval.hours * 3600 + samples.recording_interval.minutes * 60 + samples.recording_interval.seconds + (samples.recording_interval.millis.to_f / 1000)
+  #samples_count = samples.speed_samples.count
+  #laps_count = laps ? laps.laps.count : 0
+  route_samples_count = route_samples.latitude.count
+
+  builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
+    xml.gpx('version' => "1.1", 'xmlns' => "http://www.topografix.com/GPX/1/1", 'creator' => 'https://github.com/cmaion/polar') {
+      xml.metadata {
+        xml.author {
+          xml.name 'https://github.com/cmaion/polar'
+        }
+        xml.time start.iso8601
+      }
+      xml.trk {
+        xml.trkseg {
+          datetime = start
+          for i in 0..route_samples_count-1
+            xml.trkpt(:lat => route_samples.latitude[i].round(8), :lon => route_samples.longitude[i].round(8)) {
+              xml.ele route_samples.gps_altitude[i].to_f
+              xml.time datetime.iso8601
+            }
+            datetime += recording_interval
+          end
+        }
+      }
+    }
+  end
+  builder.to_xml
+end
+
+puts "Converting Polar training session in '#{dir}' to Garmin GPX format as '#{output_file}'..."
+parsed = PolarDataParser.parse_training_session(dir)
+if parsed.key?(:training_session)
+  File.open(output_file, 'w') do |f|
+    f << output_gpx(parsed)
+  end
+  puts "Done"
+else
+  puts "Error: couldn't find training session"
+end
