@@ -47,9 +47,12 @@ def output_gpx(parsed)
         xml.trkseg {
           datetime = start
           for i in 0..route_samples_count-1
-            xml.trkpt(:lat => route_samples.latitude[i].round(8), :lon => route_samples.longitude[i].round(8)) {
+              xml.trkpt(:lat => route_samples.latitude[i].round(8), :lon => route_samples.longitude[i].round(8)) {
               xml.ele route_samples.gps_altitude[i].to_f
               xml.time datetime.iso8601
+              xml.extension {
+                  xml.hr samples.heart_rate_samples[i]
+              }
             }
             datetime += recording_interval
           end
