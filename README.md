@@ -9,7 +9,7 @@ A set of command line tools written in Ruby to interact with Polar watches and d
 * `polar_dailysummary2txt`: convert raw polar daily summary to TXT format
 * `polar_activitysamples2csv`: convert raw polar daily activity samples (activity, steps, metabolic equivalent, sport id and inactivity notifications) to CSV format
 * `polar_training2sml`: convert raw polar training sessions data files to the Suuntu SML file format
-* `polar_training2gpx`: convert raw polar training sessions data files to the Garmin GPX file format (track only)
+* `polar_training2gpx`: convert raw polar training sessions data files to the Garmin GPX file format
 * `polar_fitnesstest2txt`: displays content of fitness test result and exports to TXT file
 * `polar_rrrecord2txt`: displays content of RR recording results and exports to TXT file (V800)
 

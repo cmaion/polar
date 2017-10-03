@@ -34,9 +34,14 @@ def output_gpx(parsed)
   #samples_count = samples.speed_samples.count
   #laps_count = laps ? laps.laps.count : 0
   route_samples_count = route_samples.latitude.count
+  heart_rate_samples_count = samples.heart_rate_samples.count
 
   builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
-    xml.gpx('version' => "1.1", 'xmlns' => "http://www.topografix.com/GPX/1/1", 'creator' => 'https://github.com/cmaion/polar') {
+    xml.gpx('version' => "1.1",
+            'xmlns' => "http://www.topografix.com/GPX/1/1",
+            'xmlns:xsi' => "http://www.w3.org/2001/XMLSchema-instance",
+            'xmlns:gpxtpx' => "http://www.garmin.com/xmlschemas/TrackPointExtension/v1",
+            'creator' => 'https://github.com/cmaion/polar') {
       xml.metadata {
         xml.author {
           xml.name 'https://github.com/cmaion/polar'
@@ -50,6 +55,13 @@ def output_gpx(parsed)
             xml.trkpt(:lat => route_samples.latitude[i].round(8), :lon => route_samples.longitude[i].round(8)) {
               xml.ele route_samples.gps_altitude[i].to_f
               xml.time datetime.iso8601
+              xml.extensions {
+                xml['gpxtpx'].TrackPointExtension {
+                  xml['gpxtpx'].atemp samples.temperature_samples[i].round(1)
+                  xml['gpxtpx'].hr samples.heart_rate_samples[i]
+                  xml['gpxtpx'].cad samples.cadence_samples[i]
+                }
+              }
             }
             datetime += recording_interval
           end
