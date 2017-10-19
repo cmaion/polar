@@ -57,7 +57,7 @@ def output_gpx(parsed)
               xml.time datetime.iso8601
               xml.extensions {
                 xml['gpxtpx'].TrackPointExtension {
-                  xml['gpxtpx'].atemp samples.temperature_samples[i].round(1)
+                  xml['gpxtpx'].atemp samples.temperature_samples[i].round(1) if samples.temperature_samples[i]
                   xml['gpxtpx'].hr samples.heart_rate_samples[i]
                   xml['gpxtpx'].cad samples.cadence_samples[i]
                 }
