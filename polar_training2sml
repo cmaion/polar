@@ -37,6 +37,15 @@ def output_sml(parsed)
   first_gps_fix = route_samples_count > 0 ? DateTime.new(route_samples.first_location_time.date.year, route_samples.first_location_time.date.month, route_samples.first_location_time.date.day, route_samples.first_location_time.time.hour, route_samples.first_location_time.time.minute, route_samples.first_location_time.time.seconds, '+0').to_time.utc : nil
   time_to_first_gps_fix = first_gps_fix.to_i - start.to_i
 
+  altitude_delta = 0
+  altitude_calibration_samples = samples.altitude_calibration.each do |s|
+    if s.operation == PbOperationType::SUM
+      altitude_delta = s.value
+    else
+      STDERR.puts "Warning: Altitude calibration data of unsupported operation type ignored"
+    end
+  end if samples.altitude_calibration
+
   builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
     xml.sml('SdkVersion' => "2.4.89", 'Modified' => "2012-09-22T10:39:51", 'xmlns:xsi' => "http://www.w3.org/2001/XMLSchema-instance", 'xmlns:xsd' => "http://www.w3.org/2001/XMLSchema", 'xmlns' => "http://www.suunto.com/schemas/sml") {
       xml.DeviceLog {
@@ -166,7 +175,7 @@ def output_sml(parsed)
               xml.Cadence samples.cadence_samples[i].to_f / 60
               xml.HR samples.heart_rate_samples[i].to_f / 60
               #FIXME EnergyConsumption
-              xml.Altitude samples.altitude_samples[i]
+              xml.Altitude samples.altitude_samples[i] + altitude_delta
               xml.Speed min_per_km_2_m_per_s(samples.speed_samples[i])
               xml.Time timestamp
               xml.SampleType "periodic"

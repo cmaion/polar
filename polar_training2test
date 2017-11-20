@@ -40,6 +40,22 @@ def output_test(parsed)
     end
   end
 
+  puts "Altitude calibration samples:"
+  altitude_delta = 0
+  for i in 0..samples.altitude_calibration.count - 1
+    r = []
+    r << "start_index=#{samples.altitude_calibration[i].start_index}" if samples.altitude_calibration[i].start_index
+    r << "value=#{samples.altitude_calibration[i].value}" if samples.altitude_calibration[i].value
+    r << "operation=#{samples.altitude_calibration[i].operation.to_s}" if samples.altitude_calibration[i].operation
+    puts r.join(', ')
+
+    if samples.altitude_calibration[i].operation == PbOperationType::SUM
+      altitude_delta = samples.altitude_calibration[i].value
+    else
+      STDERR.puts "Warning: Altitude calibration data of unsupported operation type ignored"
+    end
+  end
+
   timestamp = Time.at(0).utc
   for i in 0..samples_count-1
     timestamp += recording_interval
@@ -48,7 +64,7 @@ def output_test(parsed)
     r << "#{"%7.1f" % samples.distance_samples[i]} m" if samples.distance_samples[i]
     r << "#{"%3.2f" % (60.0 / samples.speed_samples[i])} min/km" if samples.speed_samples[i]
     r << "FC=#{"%3.0f" % samples.heart_rate_samples[i]} bpm" if samples.heart_rate_samples[i]
-    r << "alt=#{"%4.1f" % samples.altitude_samples[i]} m" if samples.altitude_samples[i]
+    r << "alt=#{"%4.1f" % samples.altitude_samples[i]}#{" (corrected=#{"%4.1f" % (samples.altitude_samples[i] + altitude_delta)})" if altitude_delta != 0} m" if samples.altitude_samples[i]
     r << "temp=#{"%2.1f" % samples.temperature_samples[i]} °C" if samples.temperature_samples[i]
     r << "cadence=#{samples.cadence_samples[i]}" if samples.cadence_samples[i]
     puts r.join(', ')
