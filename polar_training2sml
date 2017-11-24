@@ -175,7 +175,7 @@ def output_sml(parsed)
               xml.Cadence samples.cadence_samples[i].to_f / 60
               xml.HR samples.heart_rate_samples[i].to_f / 60
               #FIXME EnergyConsumption
-              xml.Altitude samples.altitude_samples[i] + altitude_delta
+              xml.Altitude samples.altitude_samples[i] + altitude_delta if samples.altitude_samples[i]
               xml.Speed min_per_km_2_m_per_s(samples.speed_samples[i])
               xml.Time timestamp
               xml.SampleType "periodic"
