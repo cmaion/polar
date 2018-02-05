@@ -130,6 +130,8 @@ def output_sml(parsed)
                              3
                            when 6 # XC-skiing
                              22
+                           when 9 # Nordic Walking
+                             84
                            when 11 # Hiking
                              96
                            when 15 # Strength tr.
