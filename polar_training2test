@@ -20,6 +20,7 @@ def output_test(parsed)
   sensors = parsed[:sensors]
   samples = parsed[:samples]
   route_samples = parsed[:route_samples]
+  swimming_samples = parsed[:swimming_samples]
   laps = parsed[:exercise_laps]
 
   recording_interval = samples.recording_interval.hours * 3600 + samples.recording_interval.minutes * 60 + samples.recording_interval.seconds + (samples.recording_interval.millis.to_f / 1000)
@@ -75,6 +76,13 @@ def output_test(parsed)
     for i in 0..route_samples_count-1
       timestamp = Time.at(route_samples.duration[i].to_f / 1000).utc
       puts "#{timestamp.strftime("%H:%M:%S")}, latitude=#{route_samples.latitude[i]}, longitude=#{route_samples.longitude[i]}, gps_altitude=#{route_samples.gps_altitude[i]}, satellites=#{route_samples.satellite_amount[i]}"
+    end
+  end
+
+  if swimming_samples && swimming_samples.pool_metric.count > 0
+    puts "Swimming samples:"
+    for i in 0..swimming_samples.pool_metric.count-1
+      puts "#{pb_duration_to_string swimming_samples.pool_metric[i].start_offset}: duration=#{pb_duration_to_string swimming_samples.pool_metric[i].duration}, style=#{PbSwimmingStyle.value_to_names_map[swimming_samples.pool_metric[i].style].join('|')}, strokes=#{swimming_samples.pool_metric[i].strokes}"
     end
   end
 
