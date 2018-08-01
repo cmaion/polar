@@ -28,7 +28,7 @@ def output_gpx(parsed)
   #exercise_stats = parsed[:exercise_stats]
   route_samples = parsed[:route_samples]
 
-  start = DateTime.new(training_session.start.date.year, training_session.start.date.month, training_session.start.date.day, training_session.start.time.hour, training_session.start.time.minute, training_session.start.time.seconds, "%+i" % (training_session.start.time_zone_offset / 60)).to_time.utc
+  start = DateTime.new(training_session.start.date.year, training_session.start.date.month, training_session.start.date.day, training_session.start.time.hour, training_session.start.time.minute, training_session.start.time.seconds, "%+i" % (training_session.start.time_zone_offset / 60)).to_time
 
   recording_interval = samples.recording_interval.hours * 3600 + samples.recording_interval.minutes * 60 + samples.recording_interval.seconds + (samples.recording_interval.millis.to_f / 1000)
   #samples_count = samples.speed_samples.count
