@@ -34,7 +34,7 @@ def output_test(parsed)
   puts "Distance: #{"%.1f" % training_session.distance}m"
   puts "Geo: latitude #{training_session.latitude}/longitude #{training_session.longitude}"
   puts "Heart rate: avg #{training_session.heart_rate.average}, max #{training_session.heart_rate.maximum}"
-  puts "Exercise samples: #{samples_count}"
+  puts "Exercise samples: HR=#{samples.heart_rate_samples.count}, speed=#{samples.speed_samples.count}, cadence=#{samples.cadence_samples.count}, distance=#{samples.speed_samples.count}, alt=#{samples.altitude_samples.count}, temperature=#{samples.temperature_samples.count}"
   puts "Route samples: #{route_samples_count}"
 
   if sensors
@@ -49,14 +49,60 @@ def output_test(parsed)
     r = []
     r << "start_index=#{samples.altitude_calibration[i].start_index}" if samples.altitude_calibration[i].start_index
     r << "value=#{samples.altitude_calibration[i].value}" if samples.altitude_calibration[i].value
-    r << "operation=#{samples.altitude_calibration[i].operation.to_s}" if samples.altitude_calibration[i].operation
-    puts r.join(', ')
+    r << "operation=#{PbOperationType.value_to_names_map[samples.altitude_calibration[i].operation]}" if samples.altitude_calibration[i].operation
+    puts "  #{r.join(', ')}"
+  end
 
-    if samples.altitude_calibration[i].operation == PbOperationType::SUM
-      altitude_delta = samples.altitude_calibration[i].value
-    else
-      STDERR.puts "Warning: Altitude calibration data of unsupported operation type ignored"
+  puts "Stride calibration samples:"
+  for i in 0..samples.stride_calibration.count - 1
+    r = []
+    r << "start_index=#{samples.stride_calibration[i].start_index}" if samples.stride_calibration[i].start_index
+    r << "value=#{samples.stride_calibration[i].value}" if samples.stride_calibration[i].value
+    r << "operation=#{PbOperationType.value_to_names_map[samples.stride_calibration[i].operation]}" if samples.stride_calibration[i].operation
+    puts "  #{r.join(', ')}"
+  end
+
+  if samples.heart_rate_offline.count > 0
+    r = []
+    for i in 0..samples.heart_rate_offline.count
+      r << "#{samples.heart_rate_offline[i].start_index}->#{samples.heart_rate_offline[i].stop_index}"
     end
+    puts "HR OFFLINE: #{r.join(', ')}"
+  end
+  if samples.altitude_offline.count > 0
+    r = []
+    for i in 0..samples.altitude_offline.count
+      r << "#{samples.altitude_offline[i].start_index}->#{samples.altitude_offline[i].stop_index}"
+    end
+    puts "Altitude OFFLINE: #{r.join(', ')}"
+  end
+  if samples.speed_offline.count > 0
+    r = []
+    for i in 0..samples.speed_offline.count
+      r << "#{samples.speed_offline[i].start_index}->#{samples.speed_offline[i].stop_index}"
+    end
+    puts "Speed OFFLINE: #{r.join(', ')}"
+  end
+  if samples.cadence_offline.count > 0
+    r = []
+    for i in 0..samples.cadence_offline.count
+      r << "#{samples.cadence_offline[i].start_index}->#{samples.cadence_offline[i].stop_index}"
+    end
+    puts "Cadence OFFLINE: #{r.join(', ')}"
+  end
+  if samples.distance_offline.count > 0
+    r = []
+    for i in 0..samples.distance_offline.count
+      r << "#{samples.distance_offline[i].start_index}->#{samples.distance_offline[i].stop_index}"
+    end
+    puts "Distance OFFLINE: #{r.join(', ')}"
+  end
+  if samples.temperature_offline.count > 0
+    r = []
+    for i in 0..samples.temperature_offline.count
+      r << "#{samples.temperature_offline[i].start_index}->#{samples.temperature_offline[i].stop_index}"
+    end
+    puts "Temperature OFFLINE: #{r.join(', ')}"
   end
 
   timestamp = Time.at(0).utc
@@ -66,20 +112,19 @@ def output_test(parsed)
     r << timestamp.strftime("%H:%M:%S")
     r << "#{"%7.1f" % samples.distance_samples[i]} m" if samples.distance_samples[i]
     r << "#{"%3.2f" % (60.0 / samples.speed_samples[i])} min/km" if samples.speed_samples[i]
-    r << "FC=#{"%3.0f" % samples.heart_rate_samples[i]} bpm" if samples.heart_rate_samples[i]
+    r << "HR=#{"%3.0f" % samples.heart_rate_samples[i]} bpm" if samples.heart_rate_samples[i]
     r << "alt=#{"%4.1f" % samples.altitude_samples[i]}#{" (corrected=#{"%4.1f" % (samples.altitude_samples[i] + altitude_delta)})" if altitude_delta != 0} m" if samples.altitude_samples[i]
     r << "temp=#{"%2.1f" % samples.temperature_samples[i]} °C" if samples.temperature_samples[i]
     r << "cadence=#{samples.cadence_samples[i]}" if samples.cadence_samples[i]
     r << "stride length=#{samples.stride_length_samples[i]}" if samples.stride_length_samples[i]
     r << "forward acceleration=#{samples.forward_acceleration[i]}" if samples.forward_acceleration[i]
     r << "moving type=#{PbMovingType.value_to_names_map[samples.moving_type_samples[i]]}" if samples.moving_type_samples[i]
-    r << "SPEED OFFLINE=#{samples.speed_offline[i].start_index}->#{samples.speed_offline[i].stop_index}" if samples.speed_offline[i]
-    r << "DISTANCE OFFLINE=#{samples.distance_offline[i].start_index}->#{samples.distance_offline[i].stop_index}" if samples.distance_offline[i]
     puts r.join(', ')
   end
 
   if route_samples_count > 0
     puts "GPX first fix: #{pb_sysdatetime_to_string route_samples.first_location_time}"
+    p = nil
     for i in 0..route_samples_count-1
       timestamp = Time.at(route_samples.duration[i].to_f / 1000).utc
       puts "#{timestamp.strftime("%H:%M:%S")}, latitude=#{route_samples.latitude[i]}, longitude=#{route_samples.longitude[i]}, gps_altitude=#{route_samples.gps_altitude[i]}, satellites=#{route_samples.satellite_amount[i]}, duration=#{route_samples.duration[i]}"

@@ -54,6 +54,7 @@ def output_tcx(parsed)
                 when 2
                   "Biking"
                 else
+                  # Strava also support "Hiking", "Walking" and "Swimming"
                   "Other"
                 end
         xml.Activity('Sport' => sport) {
@@ -83,7 +84,10 @@ def output_tcx(parsed)
                 prev_distance = 0
                 first_lap_sample = true
                 while datetime < start + split_time
-                  route_i = i if !route_i && first_gps_fix && datetime >= first_gps_fix
+                  if !route_i && first_gps_fix && datetime >= first_gps_fix
+                    route_i = i
+                    first_lap_sample = true
+                  end
                   xml.Trackpoint {
                     xml.Time datetime.strftime("%Y-%m-%dT%H:%M:%S.000Z")
                     if route_i && route_samples.latitude[route_i]
