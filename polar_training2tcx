@@ -67,7 +67,7 @@ def output_tcx(parsed)
             xml.Lap('StartTime' => datetime.strftime("%Y-%m-%dT%H:%M:%S.000Z")) {
               xml.TotalTimeSeconds duration
               xml.DistanceMeters distance
-              xml.MaximumSpeed max_speed if max_speed
+              xml.MaximumSpeed max_speed if max_speed && max_speed > 0
               xml.Calories lap_index == 0 ? exercise.calories : 0
               if avg_hr && avg_hr > 0
                 xml.AverageHeartRateBpm {
@@ -92,17 +92,17 @@ def output_tcx(parsed)
                         xml.LatitudeDegrees route_samples.latitude[route_i].round(8)
                         xml.LongitudeDegrees route_samples.longitude[route_i].round(8)
                       }
-                      xml.AltitudeMeters (samples.altitude_samples[i] + altitude_delta).round(3) if samples.altitude_samples[i]
-                      if samples.distance_samples[i] && (first_lap_sample || samples.distance_samples[i] != prev_distance)
-                        xml.DistanceMeters (prev_distance = samples.distance_samples[i])
-                      end
-                      if samples.heart_rate_samples[i] && samples.heart_rate_samples[i] > 0
-                        xml.HeartRateBpm {
-                          xml.Value samples.heart_rate_samples[i]
-                        }
-                      end
-                      xml.Cadence samples.cadence_samples[i] if samples.cadence_samples[i]
                     end
+                    xml.AltitudeMeters (samples.altitude_samples[i] + altitude_delta).round(3) if samples.altitude_samples[i]
+                    if samples.distance_samples[i] && (first_lap_sample || samples.distance_samples[i] != prev_distance)
+                      xml.DistanceMeters (prev_distance = samples.distance_samples[i])
+                    end
+                    if samples.heart_rate_samples[i] && samples.heart_rate_samples[i] > 0
+                      xml.HeartRateBpm {
+                        xml.Value samples.heart_rate_samples[i]
+                      }
+                    end
+                    xml.Cadence samples.cadence_samples[i] if samples.cadence_samples[i]
                     xml.SensorState 'Present'
                     first_lap_sample = false
                   }
@@ -112,11 +112,13 @@ def output_tcx(parsed)
                   datetime += recording_interval
                 end
               }
-              xml.Extensions {
-                xml.LX {
-                  xml.AvgSpeed avg_speed if avg_speed
+              if avg_speed && avg_speed > 0
+                xml.Extensions {
+                  xml.LX {
+                    xml.AvgSpeed avg_speed
+                  }
                 }
-              }
+              end
             }
           }
 
@@ -134,7 +136,7 @@ def output_tcx(parsed)
             )
           else
             laps.laps.each_with_index do |lap, lap_index|
-              process_lab.call(
+              process_lap.call(
                 lap_index,
                 pb_duration_to_float(lap.header.split_time),
                 pb_duration_to_float(lap.header.duration),
