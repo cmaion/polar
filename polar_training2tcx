@@ -35,7 +35,6 @@ def output_tcx(parsed)
   route_samples_count = route_samples.latitude.count
 
   first_gps_fix = route_samples_count > 0 ? DateTime.new(route_samples.first_location_time.date.year, route_samples.first_location_time.date.month, route_samples.first_location_time.date.day, route_samples.first_location_time.time.hour, route_samples.first_location_time.time.minute, route_samples.first_location_time.time.seconds, '+0').to_time.utc : nil
-  time_to_first_gps_fix = first_gps_fix.to_i - start.to_i
 
   altitude_delta = 0
   altitude_calibration_samples = samples.altitude_calibration.each do |s|
@@ -122,7 +121,7 @@ def output_tcx(parsed)
             }
           }
 
-          if laps.laps.count == 0
+          if laps_count == 0
             process_lap.call(
               0,
               pb_duration_to_float(training_session.duration),
