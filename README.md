@@ -45,6 +45,7 @@ To connect to the watch, macOS needs to be told not to attach it's default drive
 ``` sh
 $ sudo gem install hidapi
 $ pkg/macos_usb
+$ sudo kextunload -b com.apple.driver.usb.IOUSBHostHIDDevice
 ```
 
 Unplug the watch if already connected, and plug it again.
