@@ -28,12 +28,14 @@ def output_test(parsed)
   route_samples_count = route_samples.latitude.count
   laps_count = laps ? laps.laps.count : 0
 
-  puts "Sport: #{sport.identifier.value} (#{sport.translation.map { |t| t.text.text if t.id.language == 'en' }.compact.join('/')})"
   puts "Training session: #{training_session.sport.value} (#{training_session.session_name.text})"
+  puts "Sport: #{sport.identifier.value} (#{sport.translation.map { |t| t.text.text if t.id.language == 'en' }.compact.join('/')})"
   puts "Duration: #{pb_duration_to_string training_session.duration}"
   puts "Distance: #{"%.1f" % training_session.distance}m"
   puts "Geo: latitude #{training_session.latitude}/longitude #{training_session.longitude}"
   puts "Heart rate: avg #{training_session.heart_rate.average}, max #{training_session.heart_rate.maximum}"
+  puts "Exercise samples: #{samples_count}"
+  puts "Route samples: #{route_samples_count}"
 
   if sensors
     sensors.sensors.each do |sensor|
@@ -68,6 +70,11 @@ def output_test(parsed)
     r << "alt=#{"%4.1f" % samples.altitude_samples[i]}#{" (corrected=#{"%4.1f" % (samples.altitude_samples[i] + altitude_delta)})" if altitude_delta != 0} m" if samples.altitude_samples[i]
     r << "temp=#{"%2.1f" % samples.temperature_samples[i]} °C" if samples.temperature_samples[i]
     r << "cadence=#{samples.cadence_samples[i]}" if samples.cadence_samples[i]
+    r << "stride length=#{samples.stride_length_samples[i]}" if samples.stride_length_samples[i]
+    r << "forward acceleration=#{samples.forward_acceleration[i]}" if samples.forward_acceleration[i]
+    r << "moving type=#{PbMovingType.value_to_names_map[samples.moving_type_samples[i]]}" if samples.moving_type_samples[i]
+    r << "SPEED OFFLINE=#{samples.speed_offline[i].start_index}->#{samples.speed_offline[i].stop_index}" if samples.speed_offline[i]
+    r << "DISTANCE OFFLINE=#{samples.distance_offline[i].start_index}->#{samples.distance_offline[i].stop_index}" if samples.distance_offline[i]
     puts r.join(', ')
   end
 
@@ -75,7 +82,7 @@ def output_test(parsed)
     puts "GPX first fix: #{pb_sysdatetime_to_string route_samples.first_location_time}"
     for i in 0..route_samples_count-1
       timestamp = Time.at(route_samples.duration[i].to_f / 1000).utc
-      puts "#{timestamp.strftime("%H:%M:%S")}, latitude=#{route_samples.latitude[i]}, longitude=#{route_samples.longitude[i]}, gps_altitude=#{route_samples.gps_altitude[i]}, satellites=#{route_samples.satellite_amount[i]}"
+      puts "#{timestamp.strftime("%H:%M:%S")}, latitude=#{route_samples.latitude[i]}, longitude=#{route_samples.longitude[i]}, gps_altitude=#{route_samples.gps_altitude[i]}, satellites=#{route_samples.satellite_amount[i]}, duration=#{route_samples.duration[i]}"
     end
   end
 
