@@ -31,10 +31,12 @@ def output_gpx(parsed)
   start = DateTime.new(training_session.start.date.year, training_session.start.date.month, training_session.start.date.day, training_session.start.time.hour, training_session.start.time.minute, training_session.start.time.seconds, "%+i" % (training_session.start.time_zone_offset / 60)).to_time
 
   recording_interval = samples.recording_interval.hours * 3600 + samples.recording_interval.minutes * 60 + samples.recording_interval.seconds + (samples.recording_interval.millis.to_f / 1000)
-  #samples_count = samples.speed_samples.count
+  samples_count = samples.speed_samples.count
   #laps_count = laps ? laps.laps.count : 0
   route_samples_count = route_samples.latitude.count
   heart_rate_samples_count = samples.heart_rate_samples.count
+
+  first_gps_fix = route_samples_count > 0 ? DateTime.new(route_samples.first_location_time.date.year, route_samples.first_location_time.date.month, route_samples.first_location_time.date.day, route_samples.first_location_time.time.hour, route_samples.first_location_time.time.minute, route_samples.first_location_time.time.seconds, '+0').to_time.utc : nil
 
   altitude_delta = 0
   altitude_calibration_samples = samples.altitude_calibration.each do |s|
@@ -60,18 +62,23 @@ def output_gpx(parsed)
       xml.trk {
         xml.trkseg {
           datetime = start
-          for i in 0..route_samples_count-1
-            xml.trkpt(:lat => route_samples.latitude[i].round(8), :lon => route_samples.longitude[i].round(8)) {
-              xml.ele samples.altitude_samples[i] ? (samples.altitude_samples[i] + altitude_delta).round(3) : route_samples.gps_altitude[i].to_f
-              xml.time datetime.iso8601
-              xml.extensions {
-                xml['gpxtpx'].TrackPointExtension {
-                  xml['gpxtpx'].atemp samples.temperature_samples[i].round(1) if samples.temperature_samples[i]
-                  xml['gpxtpx'].hr samples.heart_rate_samples[i]
-                  xml['gpxtpx'].cad samples.cadence_samples[i]
+          route_i = nil
+          for i in 0..samples_count-1
+            route_i = i if !route_i && first_gps_fix && datetime >= first_gps_fix
+            if route_i && route_samples.latitude[route_i]
+              xml.trkpt(:lat => route_samples.latitude[route_i].round(8), :lon => route_samples.longitude[route_i].round(8)) {
+                xml.ele samples.altitude_samples[i] ? (samples.altitude_samples[i] + altitude_delta).round(3) : route_samples.gps_altitude[route_i].to_f
+                xml.time datetime.iso8601
+                xml.extensions {
+                  xml['gpxtpx'].TrackPointExtension {
+                    xml['gpxtpx'].atemp samples.temperature_samples[i].round(1) if samples.temperature_samples[i]
+                    xml['gpxtpx'].hr samples.heart_rate_samples[i] if samples.heart_rate_samples[i] && samples.heart_rate_samples[i] > 0
+                    xml['gpxtpx'].cad samples.cadence_samples[i] if samples.cadence_samples[i]
+                  }
                 }
               }
-            }
+            end
+            route_i += 1 if route_i
             datetime += recording_interval
           end
         }
