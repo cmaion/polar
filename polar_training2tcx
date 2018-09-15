@@ -52,6 +52,8 @@ def output_tcx(parsed)
         sport = case sport.identifier.value
                 when 1
                   "Running"
+                when 2
+                  "Biking"
                 else
                   "Other"
                 end
@@ -59,62 +61,93 @@ def output_tcx(parsed)
           xml.Id start.strftime("%Y-%m-%dT%H:%M:%S.000Z")
           datetime = start
           i = 0
-          laps.laps.each_with_index do |lap, j|
-            split_time = pb_duration_to_float lap.header.split_time
-            duration = pb_duration_to_float lap.header.duration
+          route_i = nil
+
+          process_lap = Proc.new { |lap_index, split_time, duration, distance, max_speed, avg_speed, max_hr, avg_hr, cadence_avg|
             xml.Lap('StartTime' => datetime.strftime("%Y-%m-%dT%H:%M:%S.000Z")) {
               xml.TotalTimeSeconds duration
-              xml.DistanceMeters lap.header.distance
-              xml.MaximumSpeed lap.statistics.speed.maximum.to_f * 1000 / 3600 if lap.statistics.speed
-              xml.Calories j == 0 ? exercise.calories : 0
-              if lap.statistics.heart_rate
+              xml.DistanceMeters distance
+              xml.MaximumSpeed max_speed if max_speed
+              xml.Calories lap_index == 0 ? exercise.calories : 0
+              if avg_hr && avg_hr > 0
                 xml.AverageHeartRateBpm {
-                  xml.Value lap.statistics.heart_rate.average
+                  xml.Value avg_hr
                 }
                 xml.MaximumHeartRateBpm {
-                  xml.Value lap.statistics.heart_rate.maximum
+                  xml.Value max_hr
                 }
               end
               xml.Intensity 'Active'
-              xml.Cadence lap.statistics.cadence.average if lap.statistics.cadence
+              xml.Cadence cadence_avg if cadence_avg
               xml.TriggerMethod 'Manual'
               xml.Track {
                 prev_distance = 0
                 first_lap_sample = true
                 while datetime < start + split_time
+                  route_i = i if !route_i && first_gps_fix && datetime >= first_gps_fix
                   xml.Trackpoint {
                     xml.Time datetime.strftime("%Y-%m-%dT%H:%M:%S.000Z")
-                    if route_samples.latitude[i]
+                    if route_i && route_samples.latitude[route_i]
                       xml.Position {
-                        xml.LatitudeDegrees route_samples.latitude[i].round(8)
-                        xml.LongitudeDegrees route_samples.longitude[i].round(8)
+                        xml.LatitudeDegrees route_samples.latitude[route_i].round(8)
+                        xml.LongitudeDegrees route_samples.longitude[route_i].round(8)
                       }
                       xml.AltitudeMeters (samples.altitude_samples[i] + altitude_delta).round(3) if samples.altitude_samples[i]
                       if samples.distance_samples[i] && (first_lap_sample || samples.distance_samples[i] != prev_distance)
                         xml.DistanceMeters (prev_distance = samples.distance_samples[i])
                       end
-                      if samples.heart_rate_samples[i]
+                      if samples.heart_rate_samples[i] && samples.heart_rate_samples[i] > 0
                         xml.HeartRateBpm {
                           xml.Value samples.heart_rate_samples[i]
                         }
                       end
                       xml.Cadence samples.cadence_samples[i] if samples.cadence_samples[i]
-                      xml.SensorState 'Present'
-                      first_lap_sample = false
                     end
+                    xml.SensorState 'Present'
+                    first_lap_sample = false
                   }
 
                   i += 1
+                  route_i += 1 if route_i
                   datetime += recording_interval
                 end
               }
               xml.Extensions {
                 xml.LX {
-                  xml.AvgSpeed lap.statistics.speed.average.to_f * 1000 / 3600 if lap.statistics.speed
+                  xml.AvgSpeed avg_speed if avg_speed
                 }
               }
             }
+          }
+
+          if laps.laps.count == 0
+            process_lap.call(
+              0,
+              pb_duration_to_float(training_session.duration),
+              pb_duration_to_float(training_session.duration),
+              training_session.distance,
+              exercise_stats.speed.maximum.to_f * 1000 / 3600,
+              exercise_stats.speed.average.to_f * 1000 / 3600,
+              training_session.heart_rate.maximum,
+              training_session.heart_rate.average,
+              exercise_stats.cadence.average
+            )
+          else
+            laps.laps.each_with_index do |lap, lap_index|
+              process_lab.call(
+                lap_index,
+                pb_duration_to_float(lap.header.split_time),
+                pb_duration_to_float(lap.header.duration),
+                lap.header.distance,
+                lap.statistics.speed ? lap.statistics.speed.maximum.to_f * 1000 / 3600 : nil,
+                lap.statistics.speed ? lap.statistics.speed.average.to_f * 1000 / 3600 : nil,
+                lap.statistics.heart_rate ? lap.statistics.heart_rate.maximum : nil,
+                lap.statistics.heart_rate ? lap.statistics.heart_rate.average : nil,
+                lap.statistics.cadence ? lap.statistics.cadence.average : nil
+              )
+            end
           end
+
           xml.Training('VirtualPartner' => false) {
             xml.Plan('Type' => 'Workout', 'IntervalWorkout' => false) {
               xml.Name training_session.session_name.text
