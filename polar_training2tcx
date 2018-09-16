@@ -59,7 +59,7 @@ def output_tcx(parsed)
                 end
         xml.Activity('Sport' => sport) {
           xml.Id start.strftime("%Y-%m-%dT%H:%M:%S.000Z")
-          datetime = start
+          datetime = start + recording_interval
           i = 0
           route_i = nil
 
@@ -78,14 +78,14 @@ def output_tcx(parsed)
                 }
               end
               xml.Intensity 'Active'
-              xml.Cadence cadence_avg if cadence_avg
+              xml.Cadence cadence_avg if cadence_avg && cadence_avg > 0
               xml.TriggerMethod 'Manual'
               xml.Track {
                 prev_distance = 0
                 first_lap_sample = true
-                while datetime < start + split_time
-                  if !route_i && first_gps_fix && datetime >= first_gps_fix
-                    route_i = i
+                while datetime < start + split_time + recording_interval
+                  if !route_i && first_gps_fix && datetime >= first_gps_fix - recording_interval
+                    route_i = 0
                     first_lap_sample = true
                   end
                   xml.Trackpoint {
@@ -129,7 +129,7 @@ def output_tcx(parsed)
             process_lap.call(
               0,
               pb_duration_to_float(training_session.duration),
-              pb_duration_to_float(training_session.duration),
+              pb_duration_to_float(training_session.duration).round.to_f,
               training_session.distance,
               exercise_stats.speed.maximum.to_f * 1000 / 3600,
               exercise_stats.speed.average.to_f * 1000 / 3600,
@@ -142,7 +142,7 @@ def output_tcx(parsed)
               process_lap.call(
                 lap_index,
                 pb_duration_to_float(lap.header.split_time),
-                pb_duration_to_float(lap.header.duration),
+                pb_duration_to_float(lap.header.duration).round.to_f,
                 lap.header.distance,
                 lap.statistics.speed ? lap.statistics.speed.maximum.to_f * 1000 / 3600 : nil,
                 lap.statistics.speed ? lap.statistics.speed.average.to_f * 1000 / 3600 : nil,
