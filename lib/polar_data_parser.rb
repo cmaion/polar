@@ -43,6 +43,7 @@ module PolarDataParser
 
     dir = dir + "/00"
     files_in_dir = Dir.glob("#{dir}/*").map { |f| f.sub(/^#{dir}\//, '') }
+
     if sport_file = files_in_dir.select { |f| f == 'SPORT.BPB' }.first
       parsed[:sport] = PolarData::PbSport.parse(File.open(File.join(dir, sport_file), 'rb').read)
     end
@@ -63,16 +64,30 @@ module PolarDataParser
       parsed[:exercise_stats] = PolarData::PbExerciseStatistics.parse(File.open(File.join(dir, exercise_stats_file), 'rb').read)
     end
 
+    if swim_file = files_in_dir.select { |f| f == 'SWIMSAMP.BPB' }.first
+      parsed[:swimming_samples] = PolarData::PbSwimmingSamples.parse(File.open(File.join(dir, swim_file), 'rb').read)
+    end
+
+    route_pid = nil
+    if route_file = files_in_dir.select { |f| f == 'ROUTE.GZB' }.first
+      # Parse route in a different process to parallelize on a second CPU core
+      route_read, route_write = IO.pipe
+      route_pid = fork do
+        route_read.close
+        route_result = PolarData::PbExerciseRouteSamples.parse(Zlib::GzipReader.new(File.open(File.join(dir, route_file), 'rb')).read)
+        Marshal.dump(route_result, route_write)
+      end
+      route_write.close
+    end
+
     if samples_file = files_in_dir.select { |f| f == 'SAMPLES.GZB' }.first
       parsed[:samples] = PolarData::PbExerciseSamples.parse(Zlib::GzipReader.new(File.open(File.join(dir, samples_file), 'rb')).read)
     end
 
-    if route_file = files_in_dir.select { |f| f == 'ROUTE.GZB' }.first
-      parsed[:route_samples] = PolarData::PbExerciseRouteSamples.parse(Zlib::GzipReader.new(File.open(File.join(dir, route_file), 'rb')).read)
-    end
-
-    if swim_file = files_in_dir.select { |f| f == 'SWIMSAMP.BPB' }.first
-      parsed[:swimming_samples] = PolarData::PbSwimmingSamples.parse(File.open(File.join(dir, swim_file), 'rb').read)
+    if route_pid
+      route_result = route_read.read
+      Process.wait(route_pid)
+      parsed[:route_samples] = Marshal.load(route_result)
     end
 
     parsed
