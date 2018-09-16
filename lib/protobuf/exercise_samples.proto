@@ -21,6 +21,11 @@ message PbCalibrationValue {
 	optional .PbMovingType cause = 4 ;
 }
 
+message PbExercisePause {
+	required .PbDuration start = 1 ;
+	required .PbDuration duration = 2 ;
+}
+
 message PbExerciseSamples {
 	required .PbDuration recording_interval = 1 ;
 	repeated uint32 heart_rate_samples = 2 [packed=true];
@@ -50,4 +55,5 @@ message PbExerciseSamples {
 	repeated .polar_data.PbCalibrationValue left_power_calibration = 26 ;
 	repeated .polar_data.PbCalibrationValue right_power_calibration = 27 ;
 	optional .polar_data.PbExerciseRRIntervals rr_samples = 28 ;
+	repeated .polar_data.PbExercisePause pauses = 30 ;
 }

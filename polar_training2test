@@ -35,13 +35,21 @@ def output_test(parsed)
   puts "Distance: #{"%.1f" % training_session.distance}m"
   puts "Geo: latitude #{training_session.latitude}/longitude #{training_session.longitude}"
   puts "Heart rate: avg #{training_session.heart_rate.average}, max #{training_session.heart_rate.maximum}"
-  puts "Exercise samples: HR=#{samples.heart_rate_samples.count}, speed=#{samples.speed_samples.count}, cadence=#{samples.cadence_samples.count}, distance=#{samples.speed_samples.count}, alt=#{samples.altitude_samples.count}, temperature=#{samples.temperature_samples.count}"
+  puts "Exercise samples: HR=#{samples.heart_rate_samples.count}, speed=#{samples.speed_samples.count}, cadence=#{samples.cadence_samples.count}, distance=#{samples.speed_samples.count}, alt=#{samples.altitude_samples.count}, temperature=#{samples.temperature_samples.count}, moving types=#{samples.moving_type_samples.count}, forward acc=#{samples.forward_acceleration.count}"
   puts "Route samples: #{route_samples_count}"
 
   if sensors
     sensors.sensors.each do |sensor|
       puts "Sensor used: #{sensor.mac.mac.unpack('H*').first.scan(/../).join(':') }"
     end
+  end
+
+  if samples.pauses && samples.pauses.count > 0
+    r = []
+    samples.pauses.each do |pause|
+      r << "#{pb_duration_to_string pause.start}: #{pb_duration_to_string pause.duration}"
+    end
+    puts "Pauses: #{r.join(', ')}"
   end
 
   puts "Altitude calibration samples:"
