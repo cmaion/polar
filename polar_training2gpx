@@ -61,10 +61,10 @@ def output_gpx(parsed)
       }
       xml.trk {
         xml.trkseg {
-          datetime = start
+          datetime = start + recording_interval
           route_i = nil
           for i in 0..samples_count-1
-            route_i = i if !route_i && first_gps_fix && datetime >= first_gps_fix
+            route_i = 0 if !route_i && first_gps_fix && datetime >= first_gps_fix - recording_interval
             if route_i && route_samples.latitude[route_i]
               xml.trkpt(:lat => route_samples.latitude[route_i].round(8), :lon => route_samples.longitude[route_i].round(8)) {
                 xml.ele samples.altitude_samples[i] ? (samples.altitude_samples[i] + altitude_delta).round(3) : route_samples.gps_altitude[route_i].to_f
