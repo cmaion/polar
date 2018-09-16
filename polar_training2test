@@ -65,42 +65,42 @@ def output_test(parsed)
 
   if samples.heart_rate_offline.count > 0
     r = []
-    for i in 0..samples.heart_rate_offline.count
+    for i in 0..samples.heart_rate_offline.count - 1
       r << "#{samples.heart_rate_offline[i].start_index}->#{samples.heart_rate_offline[i].stop_index}"
     end
     puts "HR OFFLINE: #{r.join(', ')}"
   end
   if samples.altitude_offline.count > 0
     r = []
-    for i in 0..samples.altitude_offline.count
+    for i in 0..samples.altitude_offline.count - 1
       r << "#{samples.altitude_offline[i].start_index}->#{samples.altitude_offline[i].stop_index}"
     end
     puts "Altitude OFFLINE: #{r.join(', ')}"
   end
   if samples.speed_offline.count > 0
     r = []
-    for i in 0..samples.speed_offline.count
+    for i in 0..samples.speed_offline.count - 1
       r << "#{samples.speed_offline[i].start_index}->#{samples.speed_offline[i].stop_index}"
     end
     puts "Speed OFFLINE: #{r.join(', ')}"
   end
   if samples.cadence_offline.count > 0
     r = []
-    for i in 0..samples.cadence_offline.count
+    for i in 0..samples.cadence_offline.count - 1
       r << "#{samples.cadence_offline[i].start_index}->#{samples.cadence_offline[i].stop_index}"
     end
     puts "Cadence OFFLINE: #{r.join(', ')}"
   end
   if samples.distance_offline.count > 0
     r = []
-    for i in 0..samples.distance_offline.count
+    for i in 0..samples.distance_offline.count - 1
       r << "#{samples.distance_offline[i].start_index}->#{samples.distance_offline[i].stop_index}"
     end
     puts "Distance OFFLINE: #{r.join(', ')}"
   end
   if samples.temperature_offline.count > 0
     r = []
-    for i in 0..samples.temperature_offline.count
+    for i in 0..samples.temperature_offline.count - 1
       r << "#{samples.temperature_offline[i].start_index}->#{samples.temperature_offline[i].stop_index}"
     end
     puts "Temperature OFFLINE: #{r.join(', ')}"
