@@ -30,6 +30,7 @@ def output_test(parsed)
 
   puts "Training session: #{training_session.sport.value} (#{training_session.session_name.text})"
   puts "Sport: #{sport.identifier.value} (#{sport.translation.map { |t| t.text.text if t.id.language == 'en' }.compact.join('/')})"
+  puts "Start: #{pb_sysdatetime_to_string training_session.start}"
   puts "Duration: #{pb_duration_to_string training_session.duration}"
   puts "Distance: #{"%.1f" % training_session.distance}m"
   puts "Geo: latitude #{training_session.latitude}/longitude #{training_session.longitude}"
