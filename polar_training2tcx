@@ -73,7 +73,7 @@ def output_tcx(parsed)
           route_i = route_samples_count > 0 ? 0 : nil
 
           process_lap = Proc.new { |lap_index, split_time, duration, distance, max_speed, avg_speed, max_hr, avg_hr, cadence_avg|
-            xml.Lap('StartTime' => (start + elapsed_with_pauses).strftime("%Y-%m-%dT%H:%M:%S.%3NZ")) {
+            xml.Lap('xmlns' => "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2", 'StartTime' => (start + elapsed_with_pauses).strftime("%Y-%m-%dT%H:%M:%S.%3NZ")) {
               xml.TotalTimeSeconds duration
               xml.DistanceMeters distance
               xml.MaximumSpeed max_speed if max_speed && max_speed > 0
@@ -143,7 +143,7 @@ def output_tcx(parsed)
               end
               if avg_speed && avg_speed > 0
                 xml.Extensions {
-                  xml.LX {
+                  xml.LX('xmlns' => "http://www.garmin.com/xmlschemas/ActivityExtension/v2") {
                     xml.AvgSpeed avg_speed
                   }
                 }
@@ -177,6 +177,12 @@ def output_tcx(parsed)
                 lap.statistics.cadence ? lap.statistics.cadence.average : nil
               )
             end
+          end
+
+          if training_session.note && training_session.note.text != ''
+            xml.Notes('xmlns' => "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2") {
+              xml.text training_session.note.text
+            }
           end
 
           xml.Training('VirtualPartner' => false) {

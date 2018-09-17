@@ -30,6 +30,7 @@ def output_test(parsed)
 
   puts "Training session: #{training_session.sport.value} (#{training_session.session_name.text})"
   puts "Sport: #{sport.identifier.value} (#{sport.translation.map { |t| t.text.text if t.id.language == 'en' }.compact.join('/')})"
+  puts "Notes: #{training_session.note.text}" if training_session.note && training_session.note.text != ''
   puts "Start: #{pb_sysdatetime_to_string training_session.start, training_session.start.time_zone_offset}"
   puts "GPS first fix: #{pb_sysdatetime_to_string route_samples.first_location_time}" if route_samples_count > 0
   puts "Duration: #{pb_duration_to_string training_session.duration}"
