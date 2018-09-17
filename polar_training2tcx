@@ -57,12 +57,15 @@ def output_tcx(parsed)
     xml.TrainingCenterDatabase('xmlns' => "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2") {
       xml.Activities {
         sport = case sport.identifier.value
-                when 1
+                when 1,   # Running
+                     27   # Trail running
                   "Running"
-                when 2
+                when 2    # Biking
                   "Biking"
+                when 11   # Hiking
+                  "Hiking"
                 else
-                  # Strava also support "Hiking", "Walking" and "Swimming"
+                  # Strava also support "Walking" and "Swimming"
                   "Other"
                 end
         xml.Activity('Sport' => sport) {
