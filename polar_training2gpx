@@ -61,25 +61,29 @@ def output_gpx(parsed)
       }
       xml.trk {
         xml.trkseg {
-          datetime = start + recording_interval
-          route_i = nil
+          elapsed = recording_interval
+          route_i = route_samples_count > 0 ? 0 : nil
           for i in 0..samples_count-1
-            route_i = 0 if !route_i && first_gps_fix && datetime >= first_gps_fix - recording_interval
-            if route_i && route_samples.latitude[route_i]
-              xml.trkpt(:lat => route_samples.latitude[route_i].round(8), :lon => route_samples.longitude[route_i].round(8)) {
-                xml.ele samples.altitude_samples[i] ? (samples.altitude_samples[i] + altitude_delta).round(3) : route_samples.gps_altitude[route_i].to_f
-                xml.time datetime.iso8601
-                xml.extensions {
-                  xml['gpxtpx'].TrackPointExtension {
-                    xml['gpxtpx'].atemp samples.temperature_samples[i].round(1) if samples.temperature_samples[i]
-                    xml['gpxtpx'].hr samples.heart_rate_samples[i] if samples.heart_rate_samples[i] && samples.heart_rate_samples[i] > 0
-                    xml['gpxtpx'].cad samples.cadence_samples[i] if samples.cadence_samples[i]
+            if route_i && route_samples.duration[route_i] && (
+                (first_gps_fix - start - recording_interval <= elapsed) ||
+                (route_samples.duration[route_i] / 1000 <= elapsed)
+            )
+              if route_samples.latitude[route_i]
+                xml.trkpt(:lat => route_samples.latitude[route_i].round(8), :lon => route_samples.longitude[route_i].round(8)) {
+                  xml.ele samples.altitude_samples[i] ? (samples.altitude_samples[i] + altitude_delta).round(3) : route_samples.gps_altitude[route_i].to_f
+                  xml.time (start + elapsed).iso8601
+                  xml.extensions {
+                    xml['gpxtpx'].TrackPointExtension {
+                      xml['gpxtpx'].atemp samples.temperature_samples[i].round(1) if samples.temperature_samples[i]
+                      xml['gpxtpx'].hr samples.heart_rate_samples[i] if samples.heart_rate_samples[i] && samples.heart_rate_samples[i] > 0
+                      xml['gpxtpx'].cad samples.cadence_samples[i] if samples.cadence_samples[i]
+                    }
                   }
                 }
-              }
+              end
+              route_i += 1
             end
-            route_i += 1 if route_i
-            datetime += recording_interval
+            elapsed += recording_interval
           end
         }
       }
