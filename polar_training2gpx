@@ -36,15 +36,6 @@ def output_gpx(parsed)
   route_samples_count = route_samples.latitude.count
   heart_rate_samples_count = samples.heart_rate_samples.count
 
-  altitude_delta = 0
-  altitude_calibration_samples = samples.altitude_calibration.each do |s|
-    if s.operation == PbOperationType::SUM
-      altitude_delta = s.value
-    else
-      STDERR.puts "Warning: Altitude calibration data of unsupported operation type ignored"
-    end
-  end if samples.altitude_calibration
-
   builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
     xml.gpx('version' => "1.1",
             'xmlns' => "http://www.topografix.com/GPX/1/1",
@@ -62,7 +53,7 @@ def output_gpx(parsed)
           datetime = start
           for i in 0..route_samples_count-1
             xml.trkpt(:lat => route_samples.latitude[i].round(8), :lon => route_samples.longitude[i].round(8)) {
-              xml.ele samples.altitude_samples[i] ? (samples.altitude_samples[i] + altitude_delta).round(3) : route_samples.gps_altitude[i].to_f
+              xml.ele route_samples.gps_altitude[i].to_f
               xml.time datetime.iso8601
               xml.extensions {
                 xml['gpxtpx'].TrackPointExtension {
