@@ -30,6 +30,7 @@ def output_tcx(parsed)
   start = DateTime.new(training_session.start.date.year, training_session.start.date.month, training_session.start.date.day, training_session.start.time.hour, training_session.start.time.minute, training_session.start.time.seconds, "%+i" % (training_session.start.time_zone_offset / 60)).to_time.utc
 
   recording_interval = samples.recording_interval.hours * 3600 + samples.recording_interval.minutes * 60 + samples.recording_interval.seconds + (samples.recording_interval.millis.to_f / 1000)
+
   samples_count = samples.speed_samples.count
   laps_count = laps ? laps.laps.count : 0
   route_samples_count = route_samples.latitude.count
@@ -48,7 +49,7 @@ def output_tcx(parsed)
   pauses = []
   if samples.pauses && samples.pauses.count > 0
     samples.pauses.each do |pause|
-      pauses << [ start + pb_duration_to_float(pause.start), pb_duration_to_float(pause.duration) ]
+      pauses << [ pb_duration_to_float(pause.start), pb_duration_to_float(pause.duration) ]
     end
   end
 
@@ -66,13 +67,13 @@ def output_tcx(parsed)
                 end
         xml.Activity('Sport' => sport) {
           xml.Id start.strftime("%Y-%m-%dT%H:%M:%S.%3NZ")
-          datetime = start + recording_interval
-          datetime_with_pauses = start + recording_interval
+          elapsed = recording_interval
+          elapsed_with_pauses = recording_interval
           i = 0
-          route_i = nil
+          route_i = route_samples_count > 0 ? 0 : nil
 
           process_lap = Proc.new { |lap_index, split_time, duration, distance, max_speed, avg_speed, max_hr, avg_hr, cadence_avg|
-            xml.Lap('StartTime' => datetime_with_pauses.strftime("%Y-%m-%dT%H:%M:%S.%3NZ")) {
+            xml.Lap('StartTime' => (start + elapsed_with_pauses).strftime("%Y-%m-%dT%H:%M:%S.%3NZ")) {
               xml.TotalTimeSeconds duration
               xml.DistanceMeters distance
               xml.MaximumSpeed max_speed if max_speed && max_speed > 0
@@ -93,29 +94,35 @@ def output_tcx(parsed)
                 xml.Track {
                   create_new_track = false
                   prev_distance = 0
-                  first_track_sample = true
-                  while datetime < start + split_time
-                    if pauses.count > 0 && pauses.first[0] < datetime
+                  first_sample_with_gps = nil
+                  while elapsed < split_time + recording_interval/2
+                    if pauses.count > 0 && pauses.first[0] < elapsed
                       paused_at, pause_duration = pauses.shift
-                      datetime_with_pauses += pause_duration
+                      elapsed_with_pauses += pause_duration
                       create_new_track = true
                       break
                     end
 
-                    if !route_i && first_gps_fix && datetime >= first_gps_fix - recording_interval
-                      route_i = 0
-                      first_track_sample = true
-                    end
+                    has_gps = false
+
                     xml.Trackpoint {
-                      xml.Time datetime_with_pauses.strftime("%Y-%m-%dT%H:%M:%S.%3NZ")
-                      if route_i && route_samples.latitude[route_i]
-                        xml.Position {
-                          xml.LatitudeDegrees route_samples.latitude[route_i].round(8)
-                          xml.LongitudeDegrees route_samples.longitude[route_i].round(8)
-                        }
+                      xml.Time (start + elapsed_with_pauses).strftime("%Y-%m-%dT%H:%M:%S.%3NZ")
+                      if route_i && route_samples.duration[route_i] && (
+                          (first_gps_fix - start - recording_interval <= elapsed) ||
+                          (route_samples.duration[route_i] / 1000 <= elapsed)
+                      )
+                        has_gps = true
+                        first_sample_with_gps = true if first_sample_with_gps.nil?
+                        if route_samples.latitude[route_i]
+                          xml.Position {
+                            xml.LatitudeDegrees route_samples.latitude[route_i].round(8)
+                            xml.LongitudeDegrees route_samples.longitude[route_i].round(8)
+                          }
+                        end
+                        route_i += 1
                       end
                       xml.AltitudeMeters (samples.altitude_samples[i] + altitude_delta).round(3) if samples.altitude_samples[i]
-                      if samples.distance_samples[i] && (first_track_sample || samples.distance_samples[i] != prev_distance)
+                      if has_gps && samples.distance_samples[i] && (first_sample_with_gps || samples.distance_samples[i] != prev_distance)
                         xml.DistanceMeters (prev_distance = samples.distance_samples[i])
                       end
                       if samples.heart_rate_samples[i] && samples.heart_rate_samples[i] > 0
@@ -125,13 +132,12 @@ def output_tcx(parsed)
                       end
                       xml.Cadence samples.cadence_samples[i] if samples.cadence_samples[i]
                       xml.SensorState 'Present'
-                      first_track_sample = false
+                      first_sample_with_gps = false if first_sample_with_gps
                     }
 
                     i += 1
-                    route_i += 1 if route_i
-                    datetime += recording_interval
-                    datetime_with_pauses += recording_interval
+                    elapsed += recording_interval
+                    elapsed_with_pauses += recording_interval
                   end
                 }
               end
