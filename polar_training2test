@@ -30,7 +30,8 @@ def output_test(parsed)
 
   puts "Training session: #{training_session.sport.value} (#{training_session.session_name.text})"
   puts "Sport: #{sport.identifier.value} (#{sport.translation.map { |t| t.text.text if t.id.language == 'en' }.compact.join('/')})"
-  puts "Start: #{pb_sysdatetime_to_string training_session.start}"
+  puts "Start: #{pb_sysdatetime_to_string training_session.start, training_session.start.time_zone_offset}"
+  puts "GPS first fix: #{pb_sysdatetime_to_string route_samples.first_location_time}" if route_samples_count > 0
   puts "Duration: #{pb_duration_to_string training_session.duration}"
   puts "Distance: #{"%.1f" % training_session.distance}m"
   puts "Geo: latitude #{training_session.latitude}/longitude #{training_session.longitude}"
@@ -60,6 +61,11 @@ def output_test(parsed)
     r << "value=#{samples.altitude_calibration[i].value}" if samples.altitude_calibration[i].value
     r << "operation=#{PbOperationType.value_to_names_map[samples.altitude_calibration[i].operation]}" if samples.altitude_calibration[i].operation
     puts "  #{r.join(', ')}"
+    if samples.altitude_calibration[i].operation == PbOperationType::SUM
+      altitude_delta = samples.altitude_calibration[i].value
+    else
+      STDERR.puts "Warning: Altitude calibration data of unsupported operation type ignored"
+    end
   end
 
   puts "Stride calibration samples:"
@@ -132,11 +138,10 @@ def output_test(parsed)
   end
 
   if route_samples_count > 0
-    puts "GPX first fix: #{pb_sysdatetime_to_string route_samples.first_location_time}"
     p = nil
     for i in 0..route_samples_count-1
       timestamp = Time.at(route_samples.duration[i].to_f / 1000).utc
-      puts "#{timestamp.strftime("%H:%M:%S")}, latitude=#{route_samples.latitude[i]}, longitude=#{route_samples.longitude[i]}, gps_altitude=#{route_samples.gps_altitude[i]}, satellites=#{route_samples.satellite_amount[i]}, duration=#{route_samples.duration[i]}"
+      puts "#{timestamp.strftime("%H:%M:%S")}, latitude=#{route_samples.latitude[i]}, longitude=#{route_samples.longitude[i]}, gps_altitude=#{route_samples.gps_altitude[i]}, satellites=#{route_samples.satellite_amount[i]}"
     end
   end
 

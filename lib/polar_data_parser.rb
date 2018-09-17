@@ -166,8 +166,8 @@ module PolarDataParser
   end
 end
 
-def pb_sysdatetime_to_string sysdatetime
-  sysdatetime.date.year > 0 ? DateTime.new(sysdatetime.date.year, sysdatetime.date.month, sysdatetime.date.day, sysdatetime.time.hour, sysdatetime.time.minute, sysdatetime.time.seconds, '+0').to_time.to_s : 'N/D'
+def pb_sysdatetime_to_string sysdatetime, time_zone_offset = 0
+  sysdatetime.date.year > 0 ? DateTime.new(sysdatetime.date.year, sysdatetime.date.month, sysdatetime.date.day, sysdatetime.time.hour, sysdatetime.time.minute, sysdatetime.time.seconds, "%+i" % (time_zone_offset / 60)).to_time.to_s : 'N/D'
 end
 
 def pb_duration_to_string duration
