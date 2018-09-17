@@ -45,6 +45,13 @@ def output_tcx(parsed)
     end
   end if samples.altitude_calibration
 
+  pauses = []
+  if samples.pauses && samples.pauses.count > 0
+    samples.pauses.each do |pause|
+      pauses << [ start + pb_duration_to_float(pause.start), pb_duration_to_float(pause.duration) ]
+    end
+  end
+
   builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
     xml.TrainingCenterDatabase('xmlns' => "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2") {
       xml.Activities {
@@ -58,13 +65,14 @@ def output_tcx(parsed)
                   "Other"
                 end
         xml.Activity('Sport' => sport) {
-          xml.Id start.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+          xml.Id start.strftime("%Y-%m-%dT%H:%M:%S.%3NZ")
           datetime = start + recording_interval
+          datetime_with_pauses = start + recording_interval
           i = 0
           route_i = nil
 
           process_lap = Proc.new { |lap_index, split_time, duration, distance, max_speed, avg_speed, max_hr, avg_hr, cadence_avg|
-            xml.Lap('StartTime' => datetime.strftime("%Y-%m-%dT%H:%M:%S.000Z")) {
+            xml.Lap('StartTime' => datetime_with_pauses.strftime("%Y-%m-%dT%H:%M:%S.%3NZ")) {
               xml.TotalTimeSeconds duration
               xml.DistanceMeters distance
               xml.MaximumSpeed max_speed if max_speed && max_speed > 0
@@ -80,41 +88,53 @@ def output_tcx(parsed)
               xml.Intensity 'Active'
               xml.Cadence cadence_avg if cadence_avg && cadence_avg > 0
               xml.TriggerMethod 'Manual'
-              xml.Track {
-                prev_distance = 0
-                first_lap_sample = true
-                while datetime < start + split_time + recording_interval
-                  if !route_i && first_gps_fix && datetime >= first_gps_fix - recording_interval
-                    route_i = 0
-                    first_lap_sample = true
-                  end
-                  xml.Trackpoint {
-                    xml.Time datetime.strftime("%Y-%m-%dT%H:%M:%S.000Z")
-                    if route_i && route_samples.latitude[route_i]
-                      xml.Position {
-                        xml.LatitudeDegrees route_samples.latitude[route_i].round(8)
-                        xml.LongitudeDegrees route_samples.longitude[route_i].round(8)
-                      }
+              create_new_track = true
+              while create_new_track do
+                xml.Track {
+                  create_new_track = false
+                  prev_distance = 0
+                  first_track_sample = true
+                  while datetime < start + split_time
+                    if pauses.count > 0 && pauses.first[0] < datetime
+                      paused_at, pause_duration = pauses.shift
+                      datetime_with_pauses += pause_duration
+                      create_new_track = true
+                      break
                     end
-                    xml.AltitudeMeters (samples.altitude_samples[i] + altitude_delta).round(3) if samples.altitude_samples[i]
-                    if samples.distance_samples[i] && (first_lap_sample || samples.distance_samples[i] != prev_distance)
-                      xml.DistanceMeters (prev_distance = samples.distance_samples[i])
-                    end
-                    if samples.heart_rate_samples[i] && samples.heart_rate_samples[i] > 0
-                      xml.HeartRateBpm {
-                        xml.Value samples.heart_rate_samples[i]
-                      }
-                    end
-                    xml.Cadence samples.cadence_samples[i] if samples.cadence_samples[i]
-                    xml.SensorState 'Present'
-                    first_lap_sample = false
-                  }
 
-                  i += 1
-                  route_i += 1 if route_i
-                  datetime += recording_interval
-                end
-              }
+                    if !route_i && first_gps_fix && datetime >= first_gps_fix - recording_interval
+                      route_i = 0
+                      first_track_sample = true
+                    end
+                    xml.Trackpoint {
+                      xml.Time datetime_with_pauses.strftime("%Y-%m-%dT%H:%M:%S.%3NZ")
+                      if route_i && route_samples.latitude[route_i]
+                        xml.Position {
+                          xml.LatitudeDegrees route_samples.latitude[route_i].round(8)
+                          xml.LongitudeDegrees route_samples.longitude[route_i].round(8)
+                        }
+                      end
+                      xml.AltitudeMeters (samples.altitude_samples[i] + altitude_delta).round(3) if samples.altitude_samples[i]
+                      if samples.distance_samples[i] && (first_track_sample || samples.distance_samples[i] != prev_distance)
+                        xml.DistanceMeters (prev_distance = samples.distance_samples[i])
+                      end
+                      if samples.heart_rate_samples[i] && samples.heart_rate_samples[i] > 0
+                        xml.HeartRateBpm {
+                          xml.Value samples.heart_rate_samples[i]
+                        }
+                      end
+                      xml.Cadence samples.cadence_samples[i] if samples.cadence_samples[i]
+                      xml.SensorState 'Present'
+                      first_track_sample = false
+                    }
+
+                    i += 1
+                    route_i += 1 if route_i
+                    datetime += recording_interval
+                    datetime_with_pauses += recording_interval
+                  end
+                }
+              end
               if avg_speed && avg_speed > 0
                 xml.Extensions {
                   xml.LX {
@@ -128,7 +148,7 @@ def output_tcx(parsed)
           if laps_count == 0
             process_lap.call(
               0,
-              pb_duration_to_float(training_session.duration),
+              pb_duration_to_float(training_session.duration) + recording_interval,
               pb_duration_to_float(training_session.duration).round.to_f,
               training_session.distance,
               exercise_stats.speed.maximum.to_f * 1000 / 3600,
