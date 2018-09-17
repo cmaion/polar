@@ -35,8 +35,6 @@ def output_tcx(parsed)
   laps_count = laps ? laps.laps.count : 0
   route_samples_count = route_samples.latitude.count
 
-  first_gps_fix = route_samples_count > 0 ? DateTime.new(route_samples.first_location_time.date.year, route_samples.first_location_time.date.month, route_samples.first_location_time.date.day, route_samples.first_location_time.time.hour, route_samples.first_location_time.time.minute, route_samples.first_location_time.time.seconds, '+0').to_time.utc : nil
-
   altitude_delta = 0
   altitude_calibration_samples = samples.altitude_calibration.each do |s|
     if s.operation == PbOperationType::SUM
@@ -74,6 +72,8 @@ def output_tcx(parsed)
           elapsed_with_pauses = recording_interval
           i = 0
           route_i = route_samples_count > 0 ? 0 : nil
+          alt_offline = false
+          gps_offline = false
 
           process_lap = Proc.new { |lap_index, split_time, duration, distance, max_speed, avg_speed, max_hr, avg_hr, cadence_avg|
             xml.Lap('xmlns' => "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2", 'StartTime' => (start + elapsed_with_pauses).strftime("%Y-%m-%dT%H:%M:%S.%3NZ")) {
@@ -106,15 +106,21 @@ def output_tcx(parsed)
                       break
                     end
 
-                    has_gps = false
+                    if alt_offline
+                      alt_offline = false if i == alt_offline.stop_index
+                    else
+                      alt_offline = samples.altitude_offline.find { |off| off.start_index == i } || false
+                    end
+
+                    if gps_offline
+                      gps_offline = false if i == gps_offline.stop_index
+                    else
+                      gps_offline = samples.distance_offline.find { |off| off.start_index == i } || false
+                    end
 
                     xml.Trackpoint {
                       xml.Time (start + elapsed_with_pauses).strftime("%Y-%m-%dT%H:%M:%S.%3NZ")
-                      if route_i && route_samples.duration[route_i] && (
-                          (first_gps_fix - start - recording_interval <= elapsed) ||
-                          (route_samples.duration[route_i] / 1000 <= elapsed)
-                      )
-                        has_gps = true
+                      if route_i && !gps_offline
                         first_sample_with_gps = true if first_sample_with_gps.nil?
                         if route_samples.latitude[route_i]
                           xml.Position {
@@ -124,8 +130,8 @@ def output_tcx(parsed)
                         end
                         route_i += 1
                       end
-                      xml.AltitudeMeters (samples.altitude_samples[i] + altitude_delta).round(3) if samples.altitude_samples[i]
-                      if has_gps && samples.distance_samples[i] && (first_sample_with_gps || samples.distance_samples[i] != prev_distance)
+                      xml.AltitudeMeters (samples.altitude_samples[i] + altitude_delta).round(3) if !alt_offline && samples.altitude_samples[i]
+                      if route_i && !gps_offline && (first_sample_with_gps || samples.distance_samples[i] != prev_distance)
                         xml.DistanceMeters (prev_distance = samples.distance_samples[i])
                       end
                       if samples.heart_rate_samples[i] && samples.heart_rate_samples[i] > 0
