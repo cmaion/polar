@@ -46,9 +46,9 @@ def output_test(parsed)
     end
   end
 
-  if samples.pauses && samples.pauses.count > 0
+  if samples.pause_times && samples.pause_times.count > 0
     r = []
-    samples.pauses.each do |pause|
+    samples.pause_times.each do |pause|
       r << "#{pb_duration_to_string pause.start}: #{pb_duration_to_string pause.duration}"
     end
     puts "Pauses: #{r.join(', ')}"

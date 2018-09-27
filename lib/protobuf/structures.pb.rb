@@ -26,6 +26,7 @@ class PbRouteId < ::ProtocolBuffers::Message; end
 class PbSwimmingPoolInfo < ::ProtocolBuffers::Message; end
 class PbTrainingProgramId < ::ProtocolBuffers::Message; end
 class PbEventId < ::ProtocolBuffers::Message; end
+class PbPauseTime < ::ProtocolBuffers::Message; end
 
 class PbVolumeTarget < ::ProtocolBuffers::Message
   # forward declarations
@@ -178,5 +179,12 @@ class PbEventId < ::ProtocolBuffers::Message
   set_fully_qualified_name "PbEventId"
 
   required :uint64, :value, 1
+end
+
+class PbPauseTime < ::ProtocolBuffers::Message
+  set_fully_qualified_name "PbPauseTime"
+
+  required ::PbDuration, :start, 1
+  required ::PbDuration, :duration, 2
 end
 

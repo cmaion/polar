@@ -105,3 +105,9 @@ message PbTrainingProgramId {
 message PbEventId {
 	required uint64 value = 1 ;
 }
+
+message PbPauseTime {
+	required .PbDuration start = 1 ;
+	required .PbDuration duration = 2 ;
+}
+

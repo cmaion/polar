@@ -45,8 +45,8 @@ def output_tcx(parsed)
   end if samples.altitude_calibration
 
   pauses = []
-  if samples.pauses && samples.pauses.count > 0
-    samples.pauses.each do |pause|
+  if samples.pause_times && samples.pause_times.count > 0
+    samples.pause_times.each do |pause|
       pauses << [ pb_duration_to_float(pause.start), pb_duration_to_float(pause.duration) ]
     end
   end

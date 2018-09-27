@@ -4,13 +4,13 @@
 require 'protocol_buffers'
 
 begin; require 'types.pb'; rescue LoadError; end
+begin; require 'structures.pb'; rescue LoadError; end
 begin; require 'exercise_rr_samples.pb'; rescue LoadError; end
 
 module PolarData
   # forward declarations
   class PbPowerMeasurements < ::ProtocolBuffers::Message; end
   class PbCalibrationValue < ::ProtocolBuffers::Message; end
-  class PbExercisePause < ::ProtocolBuffers::Message; end
   class PbExerciseSamples < ::ProtocolBuffers::Message; end
 
   class PbPowerMeasurements < ::ProtocolBuffers::Message
@@ -34,13 +34,6 @@ module PolarData
     required :float, :value, 2
     required ::PbOperationType, :operation, 3
     optional ::PbMovingType, :cause, 4
-  end
-
-  class PbExercisePause < ::ProtocolBuffers::Message
-    set_fully_qualified_name "polar_data.PbExercisePause"
-
-    required ::PbDuration, :start, 1
-    required ::PbDuration, :duration, 2
   end
 
   class PbExerciseSamples < ::ProtocolBuffers::Message
@@ -74,7 +67,7 @@ module PolarData
     repeated ::PolarData::PbCalibrationValue, :left_power_calibration, 26
     repeated ::PolarData::PbCalibrationValue, :right_power_calibration, 27
     optional ::PolarData::PbExerciseRRIntervals, :rr_samples, 28
-    repeated ::PolarData::PbExercisePause, :pauses, 30
+    repeated ::PbPauseTime, :pause_times, 30
   end
 
 end
