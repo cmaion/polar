@@ -1,0 +1,43 @@
+syntax = "proto2";
+
+package polar_data;
+
+import "types.proto";
+import "structures.proto";
+
+message PbSleepWakePhase {
+    required uint32 seconds_from_sleep_start = 1;
+    required PbSleepWakeState sleepwake_state = 2;
+}
+
+message PbSleepAnalysisResult {
+    required PbLocalDateTime sleep_start_time = 1;
+    required PbLocalDateTime sleep_end_time = 2;
+    required PbSystemDateTime last_modified = 3;
+    required uint32 sleep_goal_minutes = 4;
+    repeated PbSleepWakePhase sleepwake_phases = 5;
+    repeated PbLocalDateTime snooze_time = 6;
+    optional PbLocalDateTime alarm_time = 7;
+    optional int32 sleep_start_offset_seconds = 8 [default = 0];
+    optional int32 sleep_end_offset_seconds = 9 [default = 0];
+    optional PbSleepUserRating user_sleep_rating = 10;
+    optional PbDeviceId recording_device = 11;
+    optional bool battery_ran_out = 12 [default = false];
+}
+
+enum PbSleepWakeState {
+    PB_WAKE = -2;
+    PB_REM = -3;
+    PB_NONREM1 = -4;
+    PB_NONREM2 = -5;
+    PB_NONREM3 = -6;
+}
+
+enum PbSleepUserRating {
+    PB_SLEPT_UNDEFINED = -1;
+    PB_SLEPT_POORLY = 0;
+    PB_SLEPT_SOMEWHAT_POORLY = 1;
+    PB_SLEPT_NEITHER_POORLY_NOR_WELL = 2;
+    PB_SLEPT_SOMEWHAT_WELL = 3;
+    PB_SLEPT_WELL = 4;
+}

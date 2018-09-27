@@ -19,6 +19,7 @@ require "#{File.dirname(__FILE__)}/protobuf/dailysummary.pb"
 require "#{File.dirname(__FILE__)}/protobuf/act_samples.pb"
 require "#{File.dirname(__FILE__)}/protobuf/recovery_times.pb"
 require "#{File.dirname(__FILE__)}/protobuf/swimming_samples.pb"
+require "#{File.dirname(__FILE__)}/protobuf/sleepanalysisresult.pb"
 
 module PolarDataParser
   def self.parse_user_physdata(dir)
@@ -164,10 +165,26 @@ module PolarDataParser
 
     parsed
   end
+
+  def self.parse_sleep_analysis(dir)
+    parsed = {}
+
+    files_in_dir = Dir.glob("#{dir}/*").map { |f| f.sub(/^#{dir}\//, '') }
+
+    if file = files_in_dir.select { |f| f == 'SLEEPRES.BPB' }.first
+      parsed[:sleep] = PolarData::PbSleepAnalysisResult.parse(File.open(File.join(dir, file), 'rb').read)
+    end
+
+    parsed
+  end
 end
 
 def pb_sysdatetime_to_string sysdatetime, time_zone_offset = 0
   sysdatetime.date.year > 0 ? DateTime.new(sysdatetime.date.year, sysdatetime.date.month, sysdatetime.date.day, sysdatetime.time.hour, sysdatetime.time.minute, sysdatetime.time.seconds, "%+i" % (time_zone_offset / 60)).to_time.to_s : 'N/D'
+end
+
+def pb_localdatetime_to_string localdatetime
+  localdatetime.date.year > 0 ? DateTime.new(localdatetime.date.year, localdatetime.date.month, localdatetime.date.day, localdatetime.time.hour, localdatetime.time.minute, localdatetime.time.seconds, "%+i" % ((localdatetime.time_zone_offset || 0) / 60)).to_time.to_s : 'N/D'
 end
 
 def pb_duration_to_string duration

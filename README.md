@@ -13,9 +13,11 @@ A set of command line tools written in Ruby to interact with Polar watches and d
 * `polar_training2tcx`: convert raw polar training sessions data files to the Garmin TCX file format
 * `polar_fitnesstest2txt`: displays content of fitness test result and exports to TXT file
 * `polar_rrrecord2txt`: displays content of RR recording results and exports to TXT file (V800)
+* `polar_sleepanalysis2txt`: displays content of sleep analysis daily report and exports to TXT file (M430)
 
 Tested with:
 * Polar M200
+* Polar M430
 * Polar V800
 * might also work on other models (A360, M400, Loop...), but this is untested
 
@@ -292,6 +294,17 @@ $ polar_rrrecord2txt <path/to/raw/polar/rr_record_result> [<output_txt_file>]
 # Example:
 $ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
 $ polar_rrrecord2txt ~/Polar/<device_id>/U/0/<YYYYMMDD>/RRREC/<rr_record_id>/ /tmp/output.txt
+```
+
+
+Read sleep analysis report and convert to TXT file:
+
+```sh
+$ polar_sleepanalysis2txt <path/to/raw/polar/sleep> [<output_txt_file>]
+
+# Example:
+$ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
+$ polar_sleepanalysis2txt ~/Polar/<device_id>/U/0/<YYYYMMDD>/SLEEP /tmp/output.txt
 ```
 
 ## Known issues

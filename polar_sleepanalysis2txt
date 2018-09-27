@@ -1,0 +1,53 @@
+#!/usr/bin/env ruby
+# Parses RAW Polar daily sleep analysis result data file and convert to TXT
+
+require "#{File.dirname(__FILE__)}/lib/polar_data_parser"
+
+def usage
+  puts "Usage:"
+  puts "  #{__FILE__} <directory> [<txt file>]"
+end
+
+dir = ARGV[0]
+unless dir
+  usage
+  exit -2
+end
+
+output_file = ARGV[1] || File.join(dir, 'output.txt')
+
+def output_txt(parsed)
+  sleep = parsed[:sleep]
+  buffer = ""
+
+  buffer << "Sleep start                         : #{pb_localdatetime_to_string sleep.sleep_start_time}\n"
+  buffer << "Sleep end                           : #{pb_localdatetime_to_string sleep.sleep_end_time}\n"
+  buffer << "Last modified                       : #{pb_sysdatetime_to_string sleep.last_modified}\n"
+  buffer << "Sleep goal (minutes)                : #{sleep.sleep_goal_minutes}\n"
+  buffer << "Snooze times                        : #{sleep.snooze_time.map { |t| pb_localdatetime_to_string t }.join(', ')}\n"
+  buffer << "Alarm time                          : #{pb_localdatetime_to_string sleep.alarm_time}\n"
+  buffer << "Sleep start offset (seconds)        : #{sleep.sleep_start_offset_seconds}\n"
+  buffer << "Sleep end offset (seconds)          : #{sleep.sleep_end_offset_seconds}\n"
+  buffer << "Sleep user rating                   : #{PolarData::PbSleepUserRating.value_to_names_map[sleep.user_sleep_rating].join(', ')}\n"
+  buffer << "Recording device                    : #{sleep.recording_device.device_id}\n"
+  buffer << "Battery ran out                     : #{sleep.battery_ran_out}\n"
+
+  buffer << "\n"
+  buffer << "Sleep wake phases (from sleep start):\n"
+  sleep.sleepwake_phases.each do |phase|
+    buffer << "#{"%9is" % phase.seconds_from_sleep_start}: #{PolarData::PbSleepWakeState.value_to_names_map[phase.sleepwake_state].join(', ')}\n"
+  end
+
+  buffer
+end
+
+puts "Converting Polar daily sleep analysis report in '#{dir}' to TXT format as '#{output_file}'..."
+parsed = PolarDataParser.parse_sleep_analysis(dir)
+if parsed.key?(:sleep)
+  File.open(output_file, 'w') do |f|
+    f << output_txt(parsed)
+  end
+  puts "Done"
+else
+  puts "Error: couldn't find daily sleep analysis report"
+end
