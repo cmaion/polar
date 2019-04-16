@@ -78,6 +78,24 @@ def output_test(parsed)
     puts "  #{r.join(', ')}"
   end
 
+  puts "Left power calibration samples:"
+  for i in 0..samples.left_power_calibration.count - 1
+    r = []
+    r << "start_index=#{samples.left_power_calibration[i].start_index}" if samples.left_power_calibration[i].start_index
+    r << "value=#{samples.left_power_calibration[i].value}" if samples.left_power_calibration[i].value
+    r << "operation=#{PbOperationType.value_to_names_map[samples.left_power_calibration[i].operation]}" if samples.left_power_calibration[i].operation
+    puts "  #{r.join(', ')}"
+  end
+
+  puts "Right power calibration samples:"
+  for i in 0..samples.right_power_calibration.count - 1
+    r = []
+    r << "start_index=#{samples.right_power_calibration[i].start_index}" if samples.right_power_calibration[i].start_index
+    r << "value=#{samples.right_power_calibration[i].value}" if samples.right_power_calibration[i].value
+    r << "operation=#{PbOperationType.value_to_names_map[samples.right_power_calibration[i].operation]}" if samples.right_power_calibration[i].operation
+    puts "  #{r.join(', ')}"
+  end
+
   if samples.heart_rate_offline.count > 0
     r = []
     for i in 0..samples.heart_rate_offline.count - 1
@@ -120,6 +138,20 @@ def output_test(parsed)
     end
     puts "Temperature OFFLINE: #{r.join(', ')}"
   end
+  if samples.left_pedal_power_offline.count > 0
+    r = []
+    for i in 0..samples.left_pedal_power_offline.count - 1
+      r << "#{samples.left_pedal_power_offline[i].start_index}->#{samples.left_pedal_power_offline[i].stop_index}"
+    end
+    puts "Left power OFFLINE: #{r.join(', ')}"
+  end
+  if samples.right_pedal_power_offline.count > 0
+    r = []
+    for i in 0..samples.right_pedal_power_offline.count - 1
+      r << "#{samples.right_pedal_power_offline[i].start_index}->#{samples.right_pedal_power_offline[i].stop_index}"
+    end
+    puts "Right power OFFLINE: #{r.join(', ')}"
+  end
 
   timestamp = Time.at(0).utc
   for i in 0..samples_count-1
@@ -133,6 +165,8 @@ def output_test(parsed)
     r << "temp=#{"%2.1f" % samples.temperature_samples[i]} °C" if samples.temperature_samples[i]
     r << "cadence=#{samples.cadence_samples[i]}" if samples.cadence_samples[i]
     r << "stride length=#{samples.stride_length_samples[i]}" if samples.stride_length_samples[i]
+    r << "left power=#{samples.left_pedal_power_samples[i].current_power}" if samples.left_pedal_power_samples[i]
+    r << "right power=#{samples.right_pedal_power_samples[i].current_power}" if samples.right_pedal_power_samples[i]
     r << "forward acceleration=#{samples.forward_acceleration[i]}" if samples.forward_acceleration[i]
     r << "moving type=#{PbMovingType.value_to_names_map[samples.moving_type_samples[i]]}" if samples.moving_type_samples[i]
     puts r.join(', ')
