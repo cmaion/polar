@@ -53,7 +53,7 @@ module PolarData
     repeated ::PbSensorOffline, :speed_offline, 10
     repeated :float, :distance_samples, 11, :packed => true 
     repeated ::PbSensorOffline, :distance_offline, 12
-    repeated :uint32, :stride_length_samples, 13
+    repeated :uint32, :stride_length_samples, 13, :packed => true
     repeated ::PbSensorOffline, :stride_length_offline, 14
     repeated ::PolarData::PbCalibrationValue, :stride_calibration, 15
     repeated :float, :forward_acceleration, 16
