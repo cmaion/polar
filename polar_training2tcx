@@ -75,7 +75,7 @@ def output_tcx(parsed)
           alt_offline = false
           dist_offline = false
 
-          process_lap = Proc.new { |lap_index, split_time, duration, distance, max_speed, avg_speed, max_hr, avg_hr, cadence_avg|
+          process_lap = Proc.new { |lap_index, split_time, duration, distance, max_speed, avg_speed, max_hr, avg_hr, cadence_avg, avg_watts, max_watts|
             xml.Lap('xmlns' => "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2", 'StartTime' => (start + elapsed_with_pauses).strftime("%Y-%m-%dT%H:%M:%S.%3NZ")) {
               xml.TotalTimeSeconds duration
               xml.DistanceMeters distance
@@ -137,6 +137,17 @@ def output_tcx(parsed)
                       end
                       xml.Cadence samples.cadence_samples[i] if samples.cadence_samples[i]
                       xml.SensorState 'Present'
+                      if samples.left_pedal_power_samples[i]
+                        xml.Extensions {
+                          xml.TPX('xmlns' => "http://www.garmin.com/xmlschemas/ActivityExtension/v2") {
+                            if samples.right_pedal_power_samples[i] && samples.right_pedal_power_sample[i].current_power > 0
+                              xml.Watts samples.left_pedal_power_samples[i].current_power + samples.right_pedal_power_samples[i].current_power
+                            else
+                              xml.Watts samples.left_pedal_power_samples[i].current_power * 2
+                            end
+                          }
+                        }
+                      end
                       first_sample_with_gps = false if first_sample_with_gps
                     }
 
@@ -146,10 +157,16 @@ def output_tcx(parsed)
                   end
                 }
               end
-              if avg_speed && avg_speed > 0
+              if (avg_speed && avg_speed > 0) || (avg_watts && avg_watts > 0)
                 xml.Extensions {
                   xml.LX('xmlns' => "http://www.garmin.com/xmlschemas/ActivityExtension/v2") {
-                    xml.AvgSpeed avg_speed
+                    if avg_speed && avg_speed > 0
+                      xml.AvgSpeed avg_speed
+                    end
+                    if avg_watts && avg_watts > 0
+                      xml.AvgWatts avg_watts
+                      xml.MaxWatts max_watts
+                    end
                   }
                 }
               end
@@ -166,7 +183,9 @@ def output_tcx(parsed)
               exercise_stats.speed.average.to_f * 1000 / 3600,
               training_session.heart_rate.maximum,
               training_session.heart_rate.average,
-              exercise_stats.cadence.average
+              exercise_stats.cadence.average,
+              exercise_stats.power ? exercise_stats.power.average : nil,
+              exercise_stats.power ? exercise_stats.power.maximum : nil
             )
           else
             laps.laps.each_with_index do |lap, lap_index|
@@ -179,7 +198,9 @@ def output_tcx(parsed)
                 lap.statistics.speed ? lap.statistics.speed.average.to_f * 1000 / 3600 : nil,
                 lap.statistics.heart_rate ? lap.statistics.heart_rate.maximum : nil,
                 lap.statistics.heart_rate ? lap.statistics.heart_rate.average : nil,
-                lap.statistics.cadence ? lap.statistics.cadence.average : nil
+                lap.statistics.cadence ? lap.statistics.cadence.average : nil,
+                lap.statistics.power ? lap.statistics.power.average : nil,
+                lap.statistics.power ? lap.statistics.power.maximum : nil
               )
             end
           end
