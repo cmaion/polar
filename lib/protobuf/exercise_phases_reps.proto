@@ -1,4 +1,6 @@
 package polar_data;
+import "types.proto";
+import "exercise_stats.proto";
 
 message PbPhaseHeartRateStatistics {
 	optional uint32 average = 1 ;

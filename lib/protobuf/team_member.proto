@@ -1,4 +1,5 @@
 package polar_data;
+import "structures.proto";
 
 message PbTeamMember {
 	required uint64 team_identifier = 1 ;

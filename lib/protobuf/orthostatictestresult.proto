@@ -1,4 +1,5 @@
 package polar_data;
+import "types.proto";
 
 message PbOrthostaticTestResult {
 	required .PbLocalDateTime start_time = 1 ;

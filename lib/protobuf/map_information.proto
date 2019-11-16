@@ -1,4 +1,5 @@
 package polar_data;
+import "types.proto";
 
 message PbMapLocation {
 	required double latitude = 1 ;

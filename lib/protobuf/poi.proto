@@ -1,4 +1,6 @@
 package polar_data;
+import "types.proto";
+import "structures.proto";
 
 message PbPointOfInterest {
 	required .PbLocation location = 1 ;

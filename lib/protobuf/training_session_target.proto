@@ -1,4 +1,7 @@
 package polar_data;
+import "types.proto";
+import "structures.proto";
+import "exercise_phases.proto";
 
 message PbSteadyRacePace {
 	required .PbDuration duration = 1 ;

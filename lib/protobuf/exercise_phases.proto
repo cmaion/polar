@@ -1,11 +1,13 @@
 package polar_data;
+import "types.proto";
+import "structures.proto";
 
 message PbPhaseGoal {
 	required .polar_data.PbPhaseGoal.PhaseGoalType goal_type = 1 ;
 	optional .PbDuration duration = 2 ;
 	optional float distance = 3 ;
 	optional uint32 heart_rate = 4 ;
-	
+
 	enum PhaseGoalType {
 		PHASE_GOAL_OFF = 0;
 		PHASE_GOAL_TIME = 1;
@@ -21,14 +23,14 @@ message PbPhaseIntensity {
 	optional .polar_data.PbPhaseIntensity.IntensityZone heart_rate_zone = 2 ;
 	optional .polar_data.PbPhaseIntensity.IntensityZone speed_zone = 3 ;
 	optional .polar_data.PbPhaseIntensity.IntensityZone power_zone = 4 ;
-	
+
 	enum PhaseIntensityType {
 		PHASE_INTENSITY_FREE = 0;
 		PHASE_INTENSITY_SPORTZONE = 1;
 		PHASE_INTENSITY_SPEED_ZONE = 2;
 		PHASE_INTENSITY_POWER_ZONE = 3;
 	}
-	
+
 	message IntensityZone {
 		required uint32 lower = 1 ;
 		required uint32 upper = 2 ;
@@ -42,7 +44,7 @@ message PbPhase {
 	required .polar_data.PbPhaseIntensity intensity = 4 ;
 	optional uint32 repeat_count = 5 ;
 	optional uint32 jump_index = 6 ;
-	
+
 	enum PbPhaseChangeType {
 		CHANGE_MANUAL = 0;
 		CHANGE_AUTOMATIC = 1;

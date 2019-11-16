@@ -1,4 +1,5 @@
 package polar_data;
+import "types.proto";
 
 message PbGPSAlmanacInfo {
 	required .PbSystemDateTime end_time = 1 ;

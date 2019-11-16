@@ -1,4 +1,5 @@
 package polar_data;
+import "types.proto";
 
 message PbJump {
 	required .PbDuration flight_time = 1 ;
@@ -10,7 +11,7 @@ message PbJumpTest {
 	required .PbLocalDateTime start_time = 2 ;
 	repeated .polar_data.PbJump jump = 3 ;
 	optional .PbDuration cont_jump_duration = 4 ;
-	
+
 	enum PbJumpTestType {
 		JUMP_TEST_TYPE_SQUAT = 0;
 		JUMP_TEST_TYPE_COUNTER = 1;

@@ -1,4 +1,5 @@
 package polar_data;
+import "types.proto";
 
 message PbPasswordToken {
 	required bytes token = 1 ;

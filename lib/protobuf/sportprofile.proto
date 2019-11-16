@@ -1,4 +1,13 @@
 package polar_data;
+import "types.proto";
+import "structures.proto";
+import "sportprofile_guitar_settings.proto";
+import "sportprofile_mclaren_settings.proto";
+import "sportprofile_ace_settings.proto";
+import "sportprofile_avalon_settings.proto";
+import "sportprofile_archer_settings.proto";
+import "sportprofile_astra_settings.proto";
+import "sportprofile_maserati_settings.proto";
 
 enum PbTrainingDisplayItem {
 	TIME_OF_DAY = 2;
@@ -102,7 +111,7 @@ message PbAutoLapSettings {
 	required .polar_data.PbAutoLapSettings.PbAutomaticLap automatic_lap = 1 ;
 	optional float automatic_lap_distance = 2 ;
 	optional .PbDuration automatic_lap_duration = 3 ;
-	
+
 	enum PbAutomaticLap {
 		AUTOMATIC_LAP_OFF = 1;
 		AUTOMATIC_LAP_DISTANCE = 2;
@@ -117,7 +126,7 @@ message PbTrainingReminder {
 	optional uint32 calorie_reminder_value = 3 ;
 	optional .PbDuration time_reminder_value = 4 ;
 	optional float distance_reminder_value = 5 ;
-	
+
 	enum PbTrainingReminderType {
 		TRAINING_REMINDER_OFF = 1;
 		TRAINING_REMINDER_CALORIES_BASED = 2;
@@ -145,41 +154,41 @@ message PbSportProfileSettings {
 	optional bool speed_zone_lock_available = 16 ;
 	optional bool power_zone_lock_available = 17 ;
 	optional .polar_data.PbSportProfileSettings.PbSwimmingUnits swimming_units = 18 ;
-	
+
 	enum PbSpeedView {
 		SPEED_VIEW_PACE = 1;
 		SPEED_VIEW_SPEED = 2;
 	}
-	
+
 	enum PbZoneOptimizerSetting {
 		ZONEOPTIMIZER_OFF = 1;
 		ZONEOPTIMIZER_MODIFIED_OFF = 2;
 		ZONEOPTIMIZER_DEFAULT = 3;
 		ZONEOPTIMIZER_MODIFIED = 4;
 	}
-	
+
 	enum PbGPSSetting {
 		GPS_OFF = 0;
 		GPS_ON_NORMAL = 1;
 		GPS_ON_LONG = 2;
 	}
-	
+
 	enum PbAltitudeSetting {
 		ALTITUDE_OFF = 0;
 		ALTITUDE_ON = 1;
 	}
-	
+
 	enum PbPowerView {
 		POWER_VIEW_WATT = 1;
 		POWER_VIEW_WATT_PER_KG = 2;
 		POWER_VIEW_FTP_PERCENT = 3;
 	}
-	
+
 	enum PbStrideSpeedSource {
 		STRIDE_SPEED_SOURCE_STRIDE = 1;
 		STRIDE_SPEED_SOURCE_GPS = 2;
 	}
-	
+
 	enum PbRemoteButtonAction {
 		REMOTE_BUTTON_RING_BELL = 1;
 		REMOTE_BUTTON_ACTIVATE_BACKLIGHT = 2;
@@ -187,7 +196,7 @@ message PbSportProfileSettings {
 		REMOTE_BUTTON_TAKE_LAP = 4;
 		REMOTE_BUTTON_ACTIVATE_SAFETY_LIGHT = 5;
 	}
-	
+
 	enum PbSwimmingUnits {
 		SWIMMING_METERS = 0;
 		SWIMMING_YARDS = 1;
@@ -197,7 +206,7 @@ message PbSportProfileSettings {
 message PbAutoPause {
 	required .polar_data.PbAutoPause.PbAutoPauseTrigger trigger = 1 ;
 	optional float speed_threshold = 2 ;
-	
+
 	enum PbAutoPauseTrigger {
 		AUTO_PAUSE_OFF = 0;
 		AUTO_PAUSE_TRIGGER_SPEED = 1;

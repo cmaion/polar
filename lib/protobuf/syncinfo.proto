@@ -1,4 +1,5 @@
 package polar_data;
+import "types.proto";
 
 message PbSyncInfo {
 	required .PbSystemDateTime last_modified = 1 ;

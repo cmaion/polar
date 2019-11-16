@@ -39,7 +39,7 @@ def output_sml(parsed)
 
   altitude_delta = 0
   altitude_calibration_samples = samples.altitude_calibration.each do |s|
-    if s.operation == PbOperationType::SUM
+    if s.operation == :SUM
       altitude_delta = s.value
     else
       STDERR.puts "Warning: Altitude calibration data of unsupported operation type ignored"

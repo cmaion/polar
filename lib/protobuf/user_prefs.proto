@@ -1,4 +1,6 @@
 package polar_data;
+import "types.proto";
+import "structures.proto";
 
 message PbLocalizationPreferences {
 	optional .PbLanguageId language = 1 ;

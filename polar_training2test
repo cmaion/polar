@@ -28,7 +28,7 @@ def output_test(parsed)
   route_samples_count = route_samples.latitude.count
   laps_count = laps ? laps.laps.count : 0
 
-  puts "Training session: #{training_session.sport.value} (#{training_session.session_name.text})"
+  puts "Training session: #{training_session.sport.value if training_session.sport} (#{training_session.session_name.text})"
   puts "Sport: #{sport.identifier.value} (#{sport.translation.map { |t| t.text.text if t.id.language == 'en' }.compact.join('/')})"
   puts "Notes: #{training_session.note.text}" if training_session.note && training_session.note.text != ''
   puts "Start: #{pb_sysdatetime_to_string training_session.start, training_session.start.time_zone_offset}"
@@ -38,6 +38,10 @@ def output_test(parsed)
   puts "Geo: latitude #{training_session.latitude}/longitude #{training_session.longitude}"
   puts "Heart rate: avg #{training_session.heart_rate.average}, max #{training_session.heart_rate.maximum}"
   puts "Exercise samples: HR=#{samples.heart_rate_samples.count}, speed=#{samples.speed_samples.count}, cadence=#{samples.cadence_samples.count}, distance=#{samples.speed_samples.count}, alt=#{samples.altitude_samples.count}, temperature=#{samples.temperature_samples.count}, moving types=#{samples.moving_type_samples.count}, forward acc=#{samples.forward_acceleration.count}"
+
+  if samples.rr_samples
+    puts "RR intervals: #{samples.rr_samples.rr_intervals.join(',')}"
+  end
   puts "Route samples: #{route_samples_count}"
 
   if sensors
@@ -60,9 +64,9 @@ def output_test(parsed)
     r = []
     r << "start_index=#{samples.altitude_calibration[i].start_index}" if samples.altitude_calibration[i].start_index
     r << "value=#{samples.altitude_calibration[i].value}" if samples.altitude_calibration[i].value
-    r << "operation=#{PbOperationType.value_to_names_map[samples.altitude_calibration[i].operation]}" if samples.altitude_calibration[i].operation
+    r << "operation=#{samples.altitude_calibration[i].operation}" if samples.altitude_calibration[i].operation
     puts "  #{r.join(', ')}"
-    if samples.altitude_calibration[i].operation == PbOperationType::SUM
+    if samples.altitude_calibration[i].operation == :SUM
       altitude_delta = samples.altitude_calibration[i].value
     else
       STDERR.puts "Warning: Altitude calibration data of unsupported operation type ignored"
@@ -74,7 +78,7 @@ def output_test(parsed)
     r = []
     r << "start_index=#{samples.stride_calibration[i].start_index}" if samples.stride_calibration[i].start_index
     r << "value=#{samples.stride_calibration[i].value}" if samples.stride_calibration[i].value
-    r << "operation=#{PbOperationType.value_to_names_map[samples.stride_calibration[i].operation]}" if samples.stride_calibration[i].operation
+    r << "operation=#{samples.stride_calibration[i].operation}" if samples.stride_calibration[i].operation
     puts "  #{r.join(', ')}"
   end
 

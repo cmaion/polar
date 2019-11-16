@@ -1,4 +1,5 @@
 package polar_data;
+import "types.proto";
 
 message PbUserDeviceGeneralSettings {
 	optional .PbTimeSelection OBSOLETE_time_selection = 1 ;
@@ -12,7 +13,7 @@ message PbUserDeviceGeneralSettings {
 	optional .polar_data.PbUserDeviceGeneralSettings.PbTapButtonSensitivity tap_button_sensitivity = 10 ;
 	optional .polar_data.PbUserDeviceGeneralSettings.PbInactivityAlert inactivity_alert = 11 ;
 	optional bool ble_connect_mode_enable = 12 ;
-	
+
 	enum PbWatchFace {
 		BASIC = 1;
 		AWARD = 2;
@@ -22,17 +23,17 @@ message PbUserDeviceGeneralSettings {
 		BIG = 6;
 		ACTIVITY = 7;
 	}
-	
+
 	enum PbButtonLockMode {
 		MANUAL = 1;
 		AUTO = 2;
 	}
-	
+
 	enum PbHandedness {
 		WU_IN_LEFT_HAND = 1;
 		WU_IN_RIGHT_HAND = 2;
 	}
-	
+
 	enum PbTapButtonSensitivity {
 		TAP_BUTTON_SENSITIVITY_OFF = 1;
 		TAP_BUTTON_SENSITIVITY_VERY_LOW = 5;
@@ -40,7 +41,7 @@ message PbUserDeviceGeneralSettings {
 		TAP_BUTTON_SENSITIVITY_MEDIUM = 3;
 		TAP_BUTTON_SENSITIVITY_HIGH = 4;
 	}
-	
+
 	enum PbInactivityAlert {
 		INACTIVITY_ALERT_OFF = 1;
 		INACTIVITY_ALERT_ON = 2;
@@ -50,7 +51,7 @@ message PbUserDeviceGeneralSettings {
 message PbUserDeviceAlarmSettings {
 	required .polar_data.PbUserDeviceAlarmSettings.PbAlarmMode alarm_mode = 1 ;
 	required .PbTime alarm_time = 2 ;
-	
+
 	enum PbAlarmMode {
 		ALARM_MODE_OFF = 1;
 		ALARM_MODE_ONCE = 2;
@@ -71,7 +72,7 @@ message PbIntervalTimerValue {
 	required .polar_data.PbIntervalTimerValue.PbIntervalTimerType interval_timer_type = 1 ;
 	optional .PbDuration interval_timer_duration = 2 ;
 	optional float interval_timer_distance = 3 ;
-	
+
 	enum PbIntervalTimerType {
 		INTERVAL_TIMER_TYPE_DURATION = 1;
 		INTERVAL_TIMER_TYPE_DISTANCE = 2;
@@ -97,18 +98,18 @@ message PbUserSafetyLightSettings {
 	required .polar_data.PbUserSafetyLightSettings.PbSafetyLightMode mode = 1 ;
 	optional .polar_data.PbUserSafetyLightSettings.PbSafetyLightActivationLevel activation_level = 2 ;
 	optional .polar_data.PbUserSafetyLightSettings.PbSafetyLightBlinkRate blink_rate = 3 ;
-	
+
 	enum PbSafetyLightMode {
 		SAFETY_LIGHT_MANUAL = 1;
 		SAFETY_LIGHT_AUTOMATIC = 2;
 	}
-	
+
 	enum PbSafetyLightActivationLevel {
 		ACTIVATION_LEVEL_DARK = 1;
 		ACTIVATION_LEVEL_DUSK = 2;
 		ACTIVATION_LEVEL_LIGHT = 3;
 	}
-	
+
 	enum PbSafetyLightBlinkRate {
 		BLINK_RATE_OFF = 1;
 		BLINK_RATE_SLOW = 2;

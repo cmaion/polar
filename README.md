@@ -86,8 +86,7 @@ C:\Users\...> C:\Ruby23\bin\ruby.exe C:\path\to\this\project\directory\polar_tra
 Install the following Ruby gems:
 
 ```sh
-$ gem install ruby-protocol-buffers
-$ gem install varint   # Optional (increases ruby-protocol-buffers performance)
+$ gem install google-protobuf
 $ gem install libusb   # Required by polar_ftp
 $ gem install nokogiri # Required by polar_training2sml, polar_training2gpx and polar_training2tcx
 ```

@@ -1,4 +1,5 @@
 package polar_data;
+import "types.proto";
 
 message PbIdentifier {
 	required uint64 ecosystem_id = 1 ;

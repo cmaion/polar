@@ -18,7 +18,7 @@ message PbDailyActivityGoal {
 	optional .polar_data.PbActivityMetMinGoal activity_metmin_goal = 1 ;
 	required .PbSystemDateTime last_modified = 2 ;
 	optional .polar_data.PbPolarBalanceGoal polar_balance_goal = 4 ;
-	
+
 	enum PbActivityGoalType {
 		ACTIVITY_GOAL_DAILY_ACTIVITY = 1;
 		ACTIVITY_GOAL_WEIGHT_LOSS = 2;

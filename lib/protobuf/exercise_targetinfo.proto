@@ -1,4 +1,8 @@
 package polar_data;
+import "types.proto";
+import "structures.proto";
+import "training_session_target.proto";
+import "exercise_phases.proto";
 
 message PbSteadyRacePaceResult {
 	required .PbDuration completed_time = 1 ;

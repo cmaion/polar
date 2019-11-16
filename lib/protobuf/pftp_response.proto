@@ -10,7 +10,7 @@ message PbPFtpEntry {
 }
 
 message PbPFtpDirectory {
-	repeated .polar_protocol.PbPFtpEntry entries = 1 [packed=true];
+	repeated .polar_protocol.PbPFtpEntry entries = 1; // [packed=true];
 }
 
 message PbPFtpIdentifyDeviceResult {

@@ -1,4 +1,6 @@
 package polar_data;
+import "types.proto";
+import "structures.proto";
 
 enum PbDeviceManufacturerType {
 	MANUFACTURER_POLAR = 1;

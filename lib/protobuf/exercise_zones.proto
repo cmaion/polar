@@ -1,4 +1,6 @@
 package polar_data;
+import "types.proto";
+import "structures.proto";
 
 message PbRecordedHeartRateZone {
 	required .PbHeartRateZone zone_limits = 1 ;
