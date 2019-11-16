@@ -12,6 +12,7 @@ A set of command line tools written in Ruby to interact with Polar watches and d
 * `polar_training2gpx`: convert raw polar training sessions data files to the Garmin GPX file format
 * `polar_training2tcx`: convert raw polar training sessions data files to the Garmin TCX file format
 * `polar_fitnesstest2txt`: displays content of fitness test result and exports to TXT file
+* `polar_training2rrtxt`: extracts RR intervals from polar training sessions data files
 * `polar_rrrecord2txt`: displays content of RR recording results and exports to TXT file (V800)
 * `polar_sleepanalysis2txt`: displays content of sleep analysis daily report and exports to TXT file (M430)
 

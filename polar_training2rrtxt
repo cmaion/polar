@@ -1,0 +1,34 @@
+#!/usr/bin/env ruby
+# Parses RAW Polar training session data files and export RR samples to TXT file
+
+require "#{File.dirname(__FILE__)}/lib/polar_data_parser"
+
+def usage
+  puts "Usage:"
+  puts "  #{__FILE__} <directory>"
+end
+
+dir = ARGV[0]
+unless dir
+  usage
+  exit -2
+end
+
+output_file = ARGV[1] || File.join(dir, 'rr_samples.txt')
+
+def output_txt(parsed)
+  if (samples = parsed[:samples]) && samples.rr_samples
+    samples.rr_samples.rr_intervals.map { |i| "%.3f" % (i.to_f / 1000) }.join("\n")
+  end
+end
+
+puts "Extracting RR samples in '#{dir}' to TXT format as '#{output_file}'..."
+parsed = PolarDataParser.parse_training_session(dir)
+if parsed.key?(:training_session)
+  File.open(output_file, 'w') do |f|
+    f << output_txt(parsed)
+  end
+  puts "Done"
+else
+  puts "Error: couldn't find training session"
+end
