@@ -140,7 +140,7 @@ def output_tcx(parsed)
                       if samples.left_pedal_power_samples[i]
                         xml.Extensions {
                           xml.TPX('xmlns' => "http://www.garmin.com/xmlschemas/ActivityExtension/v2") {
-                            if samples.right_pedal_power_samples[i] && samples.right_pedal_power_sample[i].current_power > 0
+                            if samples.right_pedal_power_samples[i] && samples.right_pedal_power_samples[i].current_power > 0
                               xml.Watts samples.left_pedal_power_samples[i].current_power + samples.right_pedal_power_samples[i].current_power
                             else
                               xml.Watts samples.left_pedal_power_samples[i].current_power * 2
