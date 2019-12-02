@@ -181,9 +181,9 @@ def output_tcx(parsed)
               training_session.distance,
               exercise_stats.speed ? exercise_stats.speed.maximum.to_f * 1000 / 3600 : nil,
               exercise_stats.speed ? exercise_stats.speed.average.to_f * 1000 / 3600 : nil,
-              training_session.heart_rate.maximum,
-              training_session.heart_rate.average,
-              exercise_stats.cadence.average,
+              training_session.heart_rate ? training_session.heart_rate.maximum : nil,
+              training_session.heart_rate ? training_session.heart_rate.average : nil,
+              exercise_stats.cadence ? exercise_stats.cadence.average : nil,
               exercise_stats.power ? exercise_stats.power.average : nil,
               exercise_stats.power ? exercise_stats.power.maximum : nil
             )
