@@ -194,13 +194,13 @@ def output_tcx(parsed)
                 pb_duration_to_float(lap.header.split_time),
                 pb_duration_to_float(lap.header.duration).round.to_f,
                 lap.header.distance,
-                lap.statistics.speed ? lap.statistics.speed.maximum.to_f * 1000 / 3600 : nil,
-                lap.statistics.speed ? lap.statistics.speed.average.to_f * 1000 / 3600 : nil,
-                lap.statistics.heart_rate ? lap.statistics.heart_rate.maximum : nil,
-                lap.statistics.heart_rate ? lap.statistics.heart_rate.average : nil,
-                lap.statistics.cadence ? lap.statistics.cadence.average : nil,
-                lap.statistics.power ? lap.statistics.power.average : nil,
-                lap.statistics.power ? lap.statistics.power.maximum : nil
+                lap.statistics && lap.statistics.speed ? lap.statistics.speed.maximum.to_f * 1000 / 3600 : nil,
+                lap.statistics && lap.statistics.speed ? lap.statistics.speed.average.to_f * 1000 / 3600 : nil,
+                lap.statistics && lap.statistics.heart_rate ? lap.statistics.heart_rate.maximum : nil,
+                lap.statistics && lap.statistics.heart_rate ? lap.statistics.heart_rate.average : nil,
+                lap.statistics && lap.statistics.cadence ? lap.statistics.cadence.average : nil,
+                lap.statistics && lap.statistics.power ? lap.statistics.power.average : nil,
+                lap.statistics && lap.statistics.power ? lap.statistics.power.maximum : nil
               )
             end
           end
