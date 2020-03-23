@@ -29,11 +29,11 @@ def output_tcx(parsed)
 
   start = DateTime.new(training_session.start.date.year, training_session.start.date.month, training_session.start.date.day, training_session.start.time.hour, training_session.start.time.minute, training_session.start.time.seconds, "%+i" % (training_session.start.time_zone_offset / 60)).to_time.utc
 
-  recording_interval = samples.recording_interval.hours * 3600 + samples.recording_interval.minutes * 60 + samples.recording_interval.seconds + (samples.recording_interval.millis.to_f / 1000)
+  recording_interval = samples ? samples.recording_interval.hours * 3600 + samples.recording_interval.minutes * 60 + samples.recording_interval.seconds + (samples.recording_interval.millis.to_f / 1000) : 0
 
-  samples_count = samples.speed_samples.count
+  samples_count = samples ? samples.speed_samples.count : 0
   laps_count = laps ? laps.laps.count : 0
-  route_samples_count = route_samples.latitude.count
+  route_samples_count = route_samples ? route_samples.latitude.count : 0
 
   altitude_delta = 0
   altitude_calibration_samples = samples.altitude_calibration.each do |s|
@@ -42,10 +42,10 @@ def output_tcx(parsed)
     else
       STDERR.puts "Warning: Altitude calibration data of unsupported operation type ignored"
     end
-  end if samples.altitude_calibration
+  end if samples && samples.altitude_calibration
 
   pauses = []
-  if samples.pause_times && samples.pause_times.count > 0
+  if samples && samples.pause_times && samples.pause_times.count > 0
     samples.pause_times.each do |pause|
       pauses << [ pb_duration_to_float(pause.start), pb_duration_to_float(pause.duration) ]
     end
@@ -54,7 +54,7 @@ def output_tcx(parsed)
   builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
     xml.TrainingCenterDatabase('xmlns' => "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2") {
       xml.Activities {
-        sport = case sport.identifier.value
+        sport = case sport ? sport.identifier.value : nil
                 when 1,   # Running
                      27   # Trail running
                   "Running"
@@ -64,7 +64,14 @@ def output_tcx(parsed)
                   "Hiking"
                 else
                   # Strava also support "Walking" and "Swimming"
-                  "Other"
+                  case training_session && training_session.session_name ? training_session.session_name.text : nil
+                  when 'Biking', 'Cyclisme', "Vélo d'intérieur"
+                    'Biking'
+                  when 'Running', 'Course à pied'
+                    'Running'
+                  else
+                    "Other"
+                  end
                 end
         xml.Activity('Sport' => sport) {
           xml.Id start.strftime("%Y-%m-%dT%H:%M:%S.%3NZ")
@@ -92,7 +99,7 @@ def output_tcx(parsed)
               xml.Intensity 'Active'
               xml.Cadence cadence_avg if cadence_avg && cadence_avg > 0
               xml.TriggerMethod 'Manual'
-              create_new_track = true
+              create_new_track = !!samples
               while create_new_track do
                 xml.Track {
                   create_new_track = false
@@ -249,8 +256,9 @@ end
 puts "Converting Polar training session in '#{dir}' to TCX format as '#{output_file}'..."
 parsed = PolarDataParser.parse_training_session(dir)
 if parsed.key?(:training_session)
+  output = output_tcx(parsed)
   File.open(output_file, 'w') do |f|
-    f << output_tcx(parsed)
+    f << output
   end
   puts "Done"
 else
