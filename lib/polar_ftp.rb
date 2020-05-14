@@ -24,16 +24,14 @@ class PolarFtp
     end
 
     puts "Listing content of '#{remote_dir}'"
-    length = remote_dir.length + 4
+
+    msg = PolarProtocol::PbPFtpOperation.encode(
+      PolarProtocol::PbPFtpOperation.new(
+        :command => PolarProtocol::PbPFtpOperation::Command::GET,
+        :path => remote_dir))
+
     result = @polar_cnx.request(
-      [ length & 255, length >> 8 ].pack("C*") +
-      PolarProtocol::PbPFtpOperation.encode(
-        PolarProtocol::PbPFtpOperation.new(
-          :command => PolarProtocol::PbPFtpOperation::Command::GET,
-          :path => remote_dir
-        )
-      )
-    )
+      [ msg.length & 255, msg.length >> 8 ].pack("C*") + msg)
 
     if result[0] == "\x00"
       puts "Error. Directory doesn't exists?"
@@ -49,16 +47,14 @@ class PolarFtp
     output_file_part = "#{output_file}.part"
 
     puts "Downloading '#{remote_file}' as '#{output_file}'"
-    length = remote_file.length + 4
+
+    msg = PolarProtocol::PbPFtpOperation.encode(
+      PolarProtocol::PbPFtpOperation.new(
+        :command => PolarProtocol::PbPFtpOperation::Command::GET,
+        :path => remote_file))
+
     result = @polar_cnx.request(
-      [ length & 255, length >> 8 ].pack("C*") +
-      PolarProtocol::PbPFtpOperation.encode(
-        PolarProtocol::PbPFtpOperation.new(
-          :command => PolarProtocol::PbPFtpOperation::Command::GET,
-          :path => remote_file
-        )
-      )
-    )
+      [ msg.length & 255, msg.length >> 8 ].pack("C*") + msg)
 
     File.open(output_file_part, 'wb') do |f|
       f << result
