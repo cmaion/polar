@@ -10,7 +10,11 @@ require "pftp_response_pb"
 
 class PolarFtp
   def initialize
-    @polar_cnx = PolarUsb::Controller.new
+    @polar_cnx = PolarUsb.detect
+    unless @polar_cnx
+      puts "No Polar USB device detected."
+      exit -2
+    end
   end
 
   def dir(remote_dir)
@@ -20,7 +24,9 @@ class PolarFtp
     end
 
     puts "Listing content of '#{remote_dir}'"
+    length = remote_dir.length + 4
     result = @polar_cnx.request(
+      [ length & 255, length >> 8 ].pack("C*") +
       PolarProtocol::PbPFtpOperation.encode(
         PolarProtocol::PbPFtpOperation.new(
           :command => PolarProtocol::PbPFtpOperation::Command::GET,
@@ -43,7 +49,9 @@ class PolarFtp
     output_file_part = "#{output_file}.part"
 
     puts "Downloading '#{remote_file}' as '#{output_file}'"
+    length = remote_file.length + 4
     result = @polar_cnx.request(
+      [ length & 255, length >> 8 ].pack("C*") +
       PolarProtocol::PbPFtpOperation.encode(
         PolarProtocol::PbPFtpOperation.new(
           :command => PolarProtocol::PbPFtpOperation::Command::GET,
