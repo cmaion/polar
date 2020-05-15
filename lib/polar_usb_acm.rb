@@ -46,6 +46,11 @@ module PolarUsb
       loop do
         packet = @serial.read(65536).bytes
 
+        if packet.length == 0
+          sleep 0.1
+          next
+        end
+
         if initial_packet
           raise PolarUsbProtocolError.new "Initial packet too short?", packet if packet.length < 3
           raise PolarUsbProtocolError.new "Unknown packet type #{packet[0]}?", packet if packet[0] != 5
@@ -59,7 +64,6 @@ module PolarUsb
         return response.pack("C*") if response.size == size
 
         raise PolarUsbProtocolError.new "Buffer overflow?", response if response.size > size
-        raise PolarUsbProtocolError.new "Buffer underflow?", response if packet.length == 0
       end
     end
   end
