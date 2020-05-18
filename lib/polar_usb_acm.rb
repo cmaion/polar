@@ -27,7 +27,7 @@ module PolarUsb
 
     # Packet structure:
     # . Byte 0: packet type/flags
-    #     bit 0: 1
+    #     bit 0: initial packet
     #     bit 1: notification
     #     bit 2: 1
     #     bit 3: has more?
@@ -48,9 +48,11 @@ module PolarUsb
     end
 
     def read
+      expect_header = true
+      started = false
       is_notification = false
       has_more = false
-      initial_packet = true
+      initial_packet = false
       packet_expected_size = 0
       packet_received_size = 0
       response = []
@@ -64,15 +66,28 @@ module PolarUsb
           next
         end
 
-        if initial_packet
-          raise PolarUsbProtocolError.new "Initial packet too short?", packet if packet.length < 3
-          raise PolarUsbProtocolError.new "Unknown packet type #{packet[0]}?", packet if packet[0] & 5 != 5
+        if expect_header
+          raise PolarUsbProtocolError.new "Packet too short?", packet if packet.length < 3
+
+          initial_packet = packet[0] & 1 != 0
+          raise PolarUsbProtocolError.new "Initial packet expected?", packet if !started && !initial_packet
+          raise PolarUsbProtocolError.new "Initial packet not expected?", packet if initial_packet && started
+
           is_notification = packet[0] & 2 != 0
+
+          unknown_flag = packet[0] & 4 != 0
+          raise PolarUsbProtocolError.new "Unknown packet flag? #{packet[0]}", packet unless unknown_flag
+
           has_more = packet[0] & 8 != 0
+
+          raise PolarUsbProtocolError.new "Unknown packet flag? #{packet[0]}", packet if packet[0] & 0xf0 != 0
+
           packet_expected_size = packet[1] + (packet[2] << 8)
           packet_received_size = 0
           packet.shift(3)
-          initial_packet = false
+
+          expect_header = false
+          started = true
         end
 
         if is_notification
@@ -85,17 +100,19 @@ module PolarUsb
 
         if packet_received_size == packet_expected_size
           if has_more
-            initial_packet = true
+            @serial.write [ 8, 0, 0 ].pack("C*") # Ask more
+            expect_header = true
           elsif is_notification
-            process_notification packet
+            process_notification notification
             notification = []
-            initial_packet = true
+            expect_header = true
+            started = false
           else
             return response.pack("C*")
           end
 
-        elsif packet_received_size > size
-          raise PolarUsbProtocolError.new "Buffer overflow?", response
+        elsif packet_received_size > packet_expected_size
+          raise PolarUsbProtocolError.new "Buffer overflow?", packet
         end
       end
     end
