@@ -25,6 +25,15 @@ module PolarUsb
       raise PolarUsbDeviceError.new "Couldn't open Polar USB device on #{@serial_dev}: #{e}"
     end
 
+    # Packet structure:
+    # . Byte 0: packet type/flags
+    #     bit 0: 1
+    #     bit 1: 0
+    #     bit 2: 1
+    #     bit 3: has more?
+    # . Byte 1: payload length (lower byte)
+    # . Byte 2: payload length (upper byte)
+
     def request(data = nil)
       packet = []
       packet[0] = 5
@@ -39,8 +48,10 @@ module PolarUsb
     end
 
     def read
+      has_more = false
       initial_packet = true
-      size = 0
+      packet_expected_size = 0
+      packet_received_size = 0
       response = []
 
       loop do
@@ -53,17 +64,27 @@ module PolarUsb
 
         if initial_packet
           raise PolarUsbProtocolError.new "Initial packet too short?", packet if packet.length < 3
-          raise PolarUsbProtocolError.new "Unknown packet type #{packet[0]}?", packet if packet[0] != 5
-          size = packet[1] + (packet[2] << 8)
+          raise PolarUsbProtocolError.new "Unknown packet type #{packet[0]}?", packet if packet[0] & 7 != 5
+          has_more = packet[0] & 8 != 0
+          packet_expected_size = packet[1] + (packet[2] << 8)
+          packet_received_size = 0
           packet.shift(3)
           initial_packet = false
         end
 
         response += packet
+        packet_received_size += packet.size
 
-        return response.pack("C*") if response.size == size
+        if packet_received_size == packet_expected_size
+          if has_more
+            initial_packet = true
+          else
+            return response.pack("C*")
+          end
 
-        raise PolarUsbProtocolError.new "Buffer overflow?", response if response.size > size
+        elsif packet_received_size > size
+          raise PolarUsbProtocolError.new "Buffer overflow?", response
+        end
       end
     end
   end
