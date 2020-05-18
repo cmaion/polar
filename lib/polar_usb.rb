@@ -53,10 +53,12 @@ module PolarUsb
 
     def process_notification(data)
       case data[0]
-      when 10
-        STDERR.write "Notification received: push notification settings\n"
+      when 2
+        STDERR.write "Notification received: idle\n"
       when 3
         STDERR.write "Notification received: battery status:#{data[2]}%\n"
+      when 10
+        STDERR.write "Notification received: push notification settings\n"
       else
         STDERR.write "Notification received: unknown (#{data.inspect})\n"
       end
