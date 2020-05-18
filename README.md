@@ -17,12 +17,16 @@ A set of command line tools written in Ruby to interact with Polar watches and d
 * `polar_sleepanalysis2txt`: displays content of sleep analysis daily report and exports to TXT file (M430)
 
 Tested with:
-* Polar M200
-* Polar M430
-* Polar V800
-* might also work on other models (A360, M400, Loop...), but this is untested
-
-Tested on Linux (Ubuntu 16.10), macOS (Yosemite) and Windows (10).
+* old generation:
+  * Polar M200
+  * Polar M430
+  * Polar V800
+  * might also work on other models (A360, M400, Loop...), but this is untested
+  * tested on Linux (Ubuntu 16.10), macOS (Yosemite) and Windows (10).
+* new generation:
+  * Polar Ignite
+  * Polar Vantage M and V
+  * tested on Linux
 
 
 ## Platform specific prerequisites
@@ -44,7 +48,7 @@ Install the ruby language (>= 2.1) and dev tools, if necessary:
 * install [Homebrew package manager](http://brew.sh)
 * run `brew install ruby` to get the latest version of ruby
 
-To connect to the watch, macOS needs to be told not to attach it's default driver to the USB connection:
+To connect to older watches (< Polar Ignite), macOS needs to be told not to attach it's default driver to the USB connection:
 
 ``` sh
 $ sudo gem install hidapi
@@ -76,9 +80,7 @@ C:\Users\...> C:\Ruby23\bin\ruby.exe C:\path\to\this\project\directory\polar_ftp
 
 C:\Users\...> C:\Ruby23\bin\ruby.exe C:\path\to\this\project\directory\polar_ftp SYNC
 
-C:\Users\...> C:\Ruby23\bin\ruby.exe C:\path\to\this\project\directory\polar_training2sml C:/Users/.../Polar/<device_id>/U/0/<YYYYMMDD>/E/<training_session_id>/ /temp/output.sml
-
-C:\Users\...> C:\Ruby23\bin\ruby.exe C:\path\to\this\project\directory\polar_training2gpx C:/Users/.../Polar/<device_id>/U/0/<YYYYMMDD>/E/<training_session_id>/ /temp/output.gpx
+C:\Users\...> C:\Ruby23\bin\ruby.exe C:\path\to\this\project\directory\polar_training2tcx C:/Users/.../Polar/<device_id>/U/0/<YYYYMMDD>/E/<training_session_id>/ /temp/output.tcx
 ```
 
 
@@ -88,8 +90,9 @@ Install the following Ruby gems:
 
 ```sh
 $ gem install google-protobuf
-$ gem install libusb   # Required by polar_ftp
-$ gem install nokogiri # Required by polar_training2sml, polar_training2gpx and polar_training2tcx
+$ gem install libusb       # Required by polar_ftp
+$ gem install rubyserial   # Required by polar_ftp
+$ gem install nokogiri     # Required by polar_training2sml, polar_training2gpx and polar_training2tcx
 ```
 
 Download this repository and put it's content wherever you want (or use `git clone https://github.com/cmaion/polar` to clone it locally).
@@ -99,10 +102,14 @@ Download this repository and put it's content wherever you want (or use `git clo
 List and download raw files from the Polar watch, connected through USB:
 
 ```sh
-$ polar_ftp DIR </path/to/directory>
-$ polar_ftp GET </path/to/file> [<output_file>]
-$ polar_ftp SYNC [</path/to/local/archive>]
+$ polar_ftp [options] DIR </path/to/directory>
+$ polar_ftp [options] GET </path/to/file> [<output_file>]
+$ polar_ftp [options] SYNC [</path/to/local/archive>]
+```
 
+Note: newer Polar watches talk over a USB serial device that should be exposed by the operating system. The device path is currently not auto-detected and should be specified using `-dDEVICE` option. This defaults to `-d/dev/ttyACM0` (usual case on Linux).
+
+```sh
 # Examples:
 $ polar_ftp DIR /
 Connected to Polar V800 serial XXXXXXXX
@@ -117,6 +124,9 @@ Listing content of '/'
    USAGECNT.BPB           110
    DEVICE.BPB             120
    SYNCINFO.BPB            79
+$ polar_ftp -d/dev/ttyACM0 DIR /
+Connected to Polar Vantage M serial XXXXXXXX
+[...]
 $ polar_ftp DIR /U/
 [...]
 $ polar_ftp DIR /U/0/

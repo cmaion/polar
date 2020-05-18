@@ -1,15 +1,33 @@
 #!/usr/bin/env ruby
 # List content and download files through USB connection
+require "optparse"
 require "#{File.dirname(__FILE__)}/lib/polar_ftp"
 
 def usage
   puts "Usage:"
-  puts "  #{__FILE__} DIR <directory>"
-  puts "  #{__FILE__} GET <file> [<output_file>]"
-  puts "  #{__FILE__} SYNC [<output_dir>]"
+  puts "  #{__FILE__} [options] DIR <directory>"
+  puts "  #{__FILE__} [options] GET <file> [<output_file>]"
+  puts "  #{__FILE__} [options] SYNC [<output_dir>]"
+  puts
+  puts "Options:"
+  puts "    -d, --dev=DEVICE                 Serial port device (for Polar Ignite, Vantage...)"
+  puts "    -h                               Help"
 end
 
-polar_ftp = PolarFtp.new
+options = {}
+
+OptionParser.new do |opts|
+  opts.on("-dDEVICE", "--dev=DEVICE", "Serial port device (for Polar Ignite, Vantage...)") do |d|
+    options[:device] = d
+  end
+
+  opts.on("-h", "--help", "Usage") do
+    usage
+    exit
+  end
+end.parse!
+
+polar_ftp = PolarFtp.new(options)
 
 case (ARGV[0] || '').upcase
 when 'DIR'

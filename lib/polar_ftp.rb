@@ -9,8 +9,8 @@ require "pftp_request_pb"
 require "pftp_response_pb"
 
 class PolarFtp
-  def initialize
-    @polar_cnx = PolarUsb.detect
+  def initialize(options = {})
+    @polar_cnx = PolarUsb.detect(options)
     unless @polar_cnx
       puts "No Polar USB device detected."
       exit -2

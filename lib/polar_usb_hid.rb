@@ -2,7 +2,7 @@ module PolarUsb
   class HidController < BaseController
     PACKET_SIZE = 64
 
-    def initialize
+    def initialize(options)
       @usb_vendor = 0x0da4
       @usb_product = 0x0008
 

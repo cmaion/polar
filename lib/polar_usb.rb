@@ -16,17 +16,17 @@ module PolarUsb
     end
   end
 
-  def self.detect
+  def self.detect(options)
     controller = nil
     controller = begin
                    # Older Polar watches (V800)
-                   HidController.new
+                   HidController.new(options)
                  rescue PolarUsbDeviceNotFound
                    nil
                  end
     controller ||= begin
                      # Newer Polar watches (Vantage)
-                     AcmController.new
+                     AcmController.new(options)
                    rescue PolarUsbDeviceNotFound
                      nil
                    end
@@ -37,7 +37,7 @@ module PolarUsb
     attr_accessor :product
     attr_accessor :serial_number
 
-    def initialize
+    def initialize(options)
       raise PolarUsbNotImplemented.new
     end
 

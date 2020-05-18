@@ -2,8 +2,8 @@ require 'rubyserial'
 
 module PolarUsb
   class AcmController < BaseController
-    def initialize
-      @serial_dev = '/dev/ttyACM0'
+    def initialize(options)
+      @serial_dev = options[:device] || '/dev/ttyACM0'
       @usb_vendor = 0x0da4
       @usb_product = 0x0014
 
@@ -11,18 +11,22 @@ module PolarUsb
       @device = @usb_context.devices(idVendor: @usb_vendor, idProduct: @usb_product).first
       raise PolarUsbDeviceNotFound.new "Could not find Polar USB device" unless @device
 
-      @serial = Serial.new @serial_dev, 115200
-
       self.product = @device.product
       self.serial_number = @device.serial_number
+
+      begin
+        @serial = Serial.new @serial_dev, 115200
+      rescue RubySerial::Error => e
+        STDERR.write "#{self.product} serial #{self.serial_number} found, but couldn't open serial device on #{@serial_dev}: #{e}\nPlease specify the device to use with the -d option.\n"
+        raise PolarUsbDeviceNotFound.new "Couldn't open Polar USB device on #{@serial_dev}: #{e}"
+      end
+
       STDERR.write "Connected to #{self.product} serial #{self.serial_number}\n"
 
     rescue LIBUSB::ERROR_ACCESS
       raise PolarUsbDeviceError.new "No permission to access Polar USB device"
     rescue LIBUSB::ERROR_BUSY
       raise PolarUsbDeviceError.new "Polar USB device is busy"
-    rescue RubySerial::Error => e
-      raise PolarUsbDeviceError.new "Couldn't open Polar USB device on #{@serial_dev}: #{e}"
     end
 
     # Packet structure:
