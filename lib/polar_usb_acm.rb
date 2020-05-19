@@ -52,6 +52,7 @@ module PolarUsb
     end
 
     def read
+      done = false
       expect_header = true
       started = false
       is_notification = false
@@ -59,11 +60,12 @@ module PolarUsb
       initial_packet = false
       expected_size = 0
       received_size = 0
+      packet = []
       response = []
       notification = []
 
-      loop do
-        packet = @serial.read(65536).bytes
+      while !done || !packet.empty?
+        packet += @serial.read(65536).bytes
         payload = nil
 
         if packet.length == 0
@@ -101,31 +103,36 @@ module PolarUsb
           payload = packet
         end
 
+        if (overflow = received_size + payload.size - expected_size) > 0
+          # We have received more data than expected. Only consume what was expected and let next iteration process the remaining data.
+          packet = payload.pop(overflow)
+        else
+          packet = []
+        end
+        received_size += payload.size
+
         if is_notification
           notification += payload
         else
+          raise PolarUsbProtocolError.new "Received unexpected data after completion of previous transfer", payload if done
           response += payload
         end
 
-        received_size += payload.size
-
         if received_size == expected_size
+          expect_header = true
           if has_more
             @serial.write [ 8, 0, 0 ].pack("C*") # Ask more
-            expect_header = true
           elsif is_notification
             process_notification notification
             notification = []
-            expect_header = true
             started = false
           else
-            return response.pack("C*")
+            started = false
+            done = true
           end
-
-        elsif received_size > expected_size
-          raise PolarUsbProtocolError.new "Buffer overflow? (expected #{expected_size}, received #{received_size})", packet
         end
       end
+      return response.pack("C*")
     end
   end
 end
