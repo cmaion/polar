@@ -69,7 +69,7 @@ module PolarUsb
         payload = nil
 
         if packet.length == 0
-          sleep 0.1
+          sleep 0.01
           next
         end
 
