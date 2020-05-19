@@ -57,13 +57,14 @@ module PolarUsb
       is_notification = false
       has_more = false
       initial_packet = false
-      packet_expected_size = 0
-      packet_received_size = 0
+      expected_size = 0
+      received_size = 0
       response = []
       notification = []
 
       loop do
         packet = @serial.read(65536).bytes
+        payload = nil
 
         if packet.length == 0
           sleep 0.1
@@ -73,36 +74,42 @@ module PolarUsb
         if expect_header
           raise PolarUsbProtocolError.new "Packet too short?", packet if packet.length < 3
 
-          initial_packet = packet[0] & 1 != 0
+          packet_flags = packet[0]
+          initial_packet = packet_flags & 1 != 0
+          is_notification = packet_flags & 2 != 0
+          unknown_flag = packet_flags & 4 != 0
+          has_more = packet_flags & 8 != 0
+
+          expected_size = packet[1] + (packet[2] << 8)
+          received_size = 0
+          payload = packet[3..-1]
+
+          if packet_flags == 1
+            process_error payload
+            next
+          end
+
           raise PolarUsbProtocolError.new "Initial packet expected?", packet if !started && !initial_packet
           raise PolarUsbProtocolError.new "Initial packet not expected?", packet if initial_packet && started
-
-          is_notification = packet[0] & 2 != 0
-
-          unknown_flag = packet[0] & 4 != 0
-          raise PolarUsbProtocolError.new "Unknown packet flag? #{packet[0]}", packet unless unknown_flag
-
-          has_more = packet[0] & 8 != 0
-
-          raise PolarUsbProtocolError.new "Unknown packet flag? #{packet[0]}", packet if packet[0] & 0xf0 != 0
-
-          packet_expected_size = packet[1] + (packet[2] << 8)
-          packet_received_size = 0
-          packet.shift(3)
+          raise PolarUsbProtocolError.new "Unknown packet flag? #{packet_flags}", packet unless unknown_flag
+          raise PolarUsbProtocolError.new "Unknown packet flags? #{packet_flags}", packet if packet_flags & 0xf0 != 0
 
           expect_header = false
           started = true
+
+        else
+          payload = packet
         end
 
         if is_notification
-          notification += packet
+          notification += payload
         else
-          response += packet
+          response += payload
         end
 
-        packet_received_size += packet.size
+        received_size += payload.size
 
-        if packet_received_size == packet_expected_size
+        if received_size == expected_size
           if has_more
             @serial.write [ 8, 0, 0 ].pack("C*") # Ask more
             expect_header = true
@@ -115,8 +122,8 @@ module PolarUsb
             return response.pack("C*")
           end
 
-        elsif packet_received_size > packet_expected_size
-          raise PolarUsbProtocolError.new "Buffer overflow?", packet
+        elsif received_size > expected_size
+          raise PolarUsbProtocolError.new "Buffer overflow? (expected #{expected_size}, received #{received_size})", packet
         end
       end
     end
