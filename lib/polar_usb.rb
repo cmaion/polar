@@ -3,6 +3,7 @@ require 'libusb'
 module PolarUsb
   class PolarUsbError < StandardError; end
   class PolarUsbNotImplemented < StandardError; end
+  class PolarUsbNotPermitted < StandardError; end
   class PolarUsbDeviceNotFound < StandardError; end
   class PolarUsbDeviceError < PolarUsbError; end
   class PolarUsbProtocolError < PolarUsbError
@@ -85,7 +86,7 @@ module PolarUsb
       when 105
         raise PolarUsbError.new "Error: file exists"
       when 106
-        raise PolarUsbError.new "Error: operation not permitted"
+        raise PolarUsbNotPermitted.new "Error: operation not permitted"
       when 107
         raise PolarUsbError.new "Error: no such user"
       when 108

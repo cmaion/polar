@@ -110,7 +110,12 @@ class PolarFtp
 
             unless up2date
               FileUtils.mkdir_p(local_dir)
-              self.get(remote_dir + entry.name, local_file)
+              begin
+                remote_file = remote_dir + entry.name
+                self.get(remote_file, local_file)
+              rescue PolarUsb::PolarUsbNotPermitted
+                puts "Warning: skipping '#{remote_file}', not permitted"
+              end
             end
           end
         end
