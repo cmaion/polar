@@ -28,14 +28,14 @@ def output_txt(parsed)
   buffer << "Alarm time                          : #{pb_localdatetime_to_string sleep.alarm_time}\n"
   buffer << "Sleep start offset (seconds)        : #{sleep.sleep_start_offset_seconds}\n"
   buffer << "Sleep end offset (seconds)          : #{sleep.sleep_end_offset_seconds}\n"
-  buffer << "Sleep user rating                   : #{PolarData::PbSleepUserRating.value_to_names_map[sleep.user_sleep_rating].join(', ')}\n"
+  buffer << "Sleep user rating                   : #{sleep.user_sleep_rating}\n"
   buffer << "Recording device                    : #{sleep.recording_device.device_id}\n"
   buffer << "Battery ran out                     : #{sleep.battery_ran_out}\n"
 
   buffer << "\n"
   buffer << "Sleep wake phases (from sleep start):\n"
   sleep.sleepwake_phases.each do |phase|
-    buffer << "#{"%9is" % phase.seconds_from_sleep_start}: #{PolarData::PbSleepWakeState.value_to_names_map[phase.sleepwake_state].join(', ')}\n"
+    buffer << "#{"%9is" % phase.seconds_from_sleep_start}: #{phase.sleepwake_state}\n"
   end
 
   buffer

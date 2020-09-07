@@ -172,7 +172,7 @@ def pb_sysdatetime_to_string sysdatetime, time_zone_offset = 0
 end
 
 def pb_localdatetime_to_string localdatetime
-  localdatetime.date.year > 0 ? DateTime.new(localdatetime.date.year, localdatetime.date.month, localdatetime.date.day, localdatetime.time.hour, localdatetime.time.minute, localdatetime.time.seconds, "%+i" % ((localdatetime.time_zone_offset || 0) / 60)).to_time.to_s : 'N/D'
+  localdatetime && localdatetime.date.year > 0 ? DateTime.new(localdatetime.date.year, localdatetime.date.month, localdatetime.date.day, localdatetime.time.hour, localdatetime.time.minute, localdatetime.time.seconds, "%+i" % ((localdatetime.time_zone_offset || 0) / 60)).to_time.to_s : 'N/D'
 end
 
 def pb_duration_to_string duration
