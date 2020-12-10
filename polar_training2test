@@ -36,7 +36,7 @@ def output_test(parsed)
   puts "Duration: #{pb_duration_to_string training_session.duration}"
   puts "Distance: #{"%.1f" % training_session.distance}m"
   puts "Geo: latitude #{training_session.latitude}/longitude #{training_session.longitude}"
-  puts "Heart rate: avg #{training_session.heart_rate.average}, max #{training_session.heart_rate.maximum}"
+  puts "Heart rate: avg #{training_session.heart_rate.average}, max #{training_session.heart_rate.maximum}" if training_session.heart_rate
   puts "Exercise samples: HR=#{samples.heart_rate_samples.count}, speed=#{samples.speed_samples.count}, cadence=#{samples.cadence_samples.count}, distance=#{samples.speed_samples.count}, alt=#{samples.altitude_samples.count}, temperature=#{samples.temperature_samples.count}, moving types=#{samples.moving_type_samples.count}, forward acc=#{samples.forward_acceleration.count}"
 
   if samples.rr_samples
@@ -87,7 +87,7 @@ def output_test(parsed)
     r = []
     r << "start_index=#{samples.left_power_calibration[i].start_index}" if samples.left_power_calibration[i].start_index
     r << "value=#{samples.left_power_calibration[i].value}" if samples.left_power_calibration[i].value
-    r << "operation=#{PbOperationType.value_to_names_map[samples.left_power_calibration[i].operation]}" if samples.left_power_calibration[i].operation
+    r << "operation=#{samples.left_power_calibration[i].operation}" if samples.left_power_calibration[i].operation
     puts "  #{r.join(', ')}"
   end
 
@@ -96,7 +96,7 @@ def output_test(parsed)
     r = []
     r << "start_index=#{samples.right_power_calibration[i].start_index}" if samples.right_power_calibration[i].start_index
     r << "value=#{samples.right_power_calibration[i].value}" if samples.right_power_calibration[i].value
-    r << "operation=#{PbOperationType.value_to_names_map[samples.right_power_calibration[i].operation]}" if samples.right_power_calibration[i].operation
+    r << "operation=#{samples.right_power_calibration[i].operation}" if samples.right_power_calibration[i].operation
     puts "  #{r.join(', ')}"
   end
 
@@ -172,7 +172,7 @@ def output_test(parsed)
     r << "left power=#{samples.left_pedal_power_samples[i].current_power}" if samples.left_pedal_power_samples[i]
     r << "right power=#{samples.right_pedal_power_samples[i].current_power}" if samples.right_pedal_power_samples[i]
     r << "forward acceleration=#{samples.forward_acceleration[i]}" if samples.forward_acceleration[i]
-    r << "moving type=#{PbMovingType.value_to_names_map[samples.moving_type_samples[i]]}" if samples.moving_type_samples[i]
+    r << "moving type=#{samples.moving_type_samples[i]}" if samples.moving_type_samples[i]
     puts r.join(', ')
   end
 
@@ -187,7 +187,7 @@ def output_test(parsed)
   if swimming_samples && swimming_samples.pool_metric.count > 0
     puts "Swimming samples:"
     for i in 0..swimming_samples.pool_metric.count-1
-      puts "#{pb_duration_to_string swimming_samples.pool_metric[i].start_offset}: duration=#{pb_duration_to_string swimming_samples.pool_metric[i].duration}, style=#{PbSwimmingStyle.value_to_names_map[swimming_samples.pool_metric[i].style].join('|')}, strokes=#{swimming_samples.pool_metric[i].strokes}"
+      puts "#{pb_duration_to_string swimming_samples.pool_metric[i].start_offset}: duration=#{pb_duration_to_string swimming_samples.pool_metric[i].duration}, style=#{swimming_samples.pool_metric[i].style}, strokes=#{swimming_samples.pool_metric[i].strokes}"
     end
   end
 
