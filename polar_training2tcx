@@ -112,15 +112,11 @@ def output_tcx(parsed)
                       break
                     end
 
-                    if alt_offline
-                      alt_offline = false if i > alt_offline.stop_index
-                    else
+                    if !alt_offline || i > alt_offline.stop_index
                       alt_offline = samples.altitude_offline.find { |off| off.start_index == i } || false
                     end
 
-                    if dist_offline
-                      dist_offline = false if i > dist_offline.stop_index
-                    else
+                    if !dist_offline || i > dist_offline.stop_index
                       dist_offline = samples.distance_offline.find { |off| off.start_index == i } || false
                     end
 
