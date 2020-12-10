@@ -69,7 +69,7 @@ def output_csv(parsed)
   activity_name = ''
   result.sort { |(ts1,r1),(ts2,r2)| ts1 <=> ts2 }.each do |ts, r|
     if r[:activity]
-      activity_name = PolarData::PbActivityInfo::ActivityClass.value_to_names_map[r[:activity]].first.to_s
+      activity_name = r[:activity].to_s
     end
 
     if r[:sport]
