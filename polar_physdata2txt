@@ -19,24 +19,24 @@ output_file = ARGV[1] || File.join(dir, 'output.txt')
 def output_txt(parsed)
   phys = parsed[:phys]
 
-  start_time = phys.snapshot_start_time.date.year > 0 ? DateTime.new(phys.snapshot_start_time.date.year, phys.snapshot_start_time.date.month, phys.snapshot_start_time.date.day, phys.snapshot_start_time.time.hour, phys.snapshot_start_time.time.minute, phys.snapshot_start_time.time.seconds, "%+i" % (phys.snapshot_start_time.time_zone_offset / 60)).to_time.to_s : 'N/D'
+  start_time = phys.snapshot_start_time && phys.snapshot_start_time.date.year > 0 ? DateTime.new(phys.snapshot_start_time.date.year, phys.snapshot_start_time.date.month, phys.snapshot_start_time.date.day, phys.snapshot_start_time.time.hour, phys.snapshot_start_time.time.minute, phys.snapshot_start_time.time.seconds, "%+i" % (phys.snapshot_start_time.time_zone_offset / 60)).to_time.to_s : 'N/D'
 
   buffer = ""
   buffer << "Snapshot date             : #{start_time}\n"
   buffer << "Last modified             : #{pb_sysdatetime_to_string phys.last_modified}\n"
-  buffer << "Gender                    : #{PolarData::PbUserGender::Gender.value_to_names_map[phys.gender.value].first.to_s}\n"
+  buffer << "Gender                    : #{phys.gender.value.to_s}\n"
   buffer << "Birthday                  : #{pb_date_to_string phys.birthday.value}\n"
-  buffer << "Weight                    : #{"%.1f" % phys.weight.value} [#{PolarData::PbUserWeight::WeightSettingSource.value_to_names_map[phys.weight.setting_source].first.to_s}] (last modified #{pb_sysdatetime_to_string phys.weight.last_modified})\n"
+  buffer << "Weight                    : #{"%.1f" % phys.weight.value} [#{phys.weight.setting_source.to_s}] (last modified #{pb_sysdatetime_to_string phys.weight.last_modified})\n"
   buffer << "Height                    : #{"%.1f" % phys.height.value} (last modified #{pb_sysdatetime_to_string phys.height.last_modified})\n"
-  buffer << "HR max                    : #{phys.maximum_heartrate.value} [#{PolarData::PbUserHrAttribute::HrSettingSource.value_to_names_map[phys.maximum_heartrate.setting_source].first.to_s}] (last modified #{pb_sysdatetime_to_string phys.maximum_heartrate.last_modified})\n"
-  buffer << "HR resting                : #{phys.resting_heartrate.value} [#{PolarData::PbUserHrAttribute::HrSettingSource.value_to_names_map[phys.resting_heartrate.setting_source].first.to_s}] (last modified #{pb_sysdatetime_to_string phys.resting_heartrate.last_modified})\n"
-  buffer << "Aerobic threshold         : #{phys.aerobic_threshold.value} [#{PolarData::PbUserHrAttribute::HrSettingSource.value_to_names_map[phys.aerobic_threshold.setting_source].first.to_s}] (last modified #{pb_sysdatetime_to_string phys.aerobic_threshold.last_modified})\n"
-  buffer << "Anaerobic threshold       : #{phys.anaerobic_threshold.value} [#{PolarData::PbUserHrAttribute::HrSettingSource.value_to_names_map[phys.anaerobic_threshold.setting_source].first.to_s}] (last modified #{pb_sysdatetime_to_string phys.anaerobic_threshold.last_modified})\n"
-  buffer << "VO2max                    : #{phys.vo2max.value} [#{PolarData::PbUserVo2Max::Vo2MaxSettingSource.value_to_names_map[phys.vo2max.setting_source].first.to_s}] (last modified #{pb_sysdatetime_to_string phys.vo2max.last_modified})\n"
-  buffer << "Training background       : #{PolarData::PbUserTrainingBackground::TrainingBackground.value_to_names_map[phys.training_background.value].first.to_s} (last modified #{pb_sysdatetime_to_string phys.training_background.last_modified})\n"
-  buffer << "Typical day               : #{PolarData::PbUserTypicalDay::TypicalDay.value_to_names_map[phys.typical_day.value].first.to_s} (last modified #{pb_sysdatetime_to_string phys.typical_day.last_modified})\n"
+  buffer << "HR max                    : #{phys.maximum_heartrate.value} [#{phys.maximum_heartrate.setting_source.to_s}] (last modified #{pb_sysdatetime_to_string phys.maximum_heartrate.last_modified})\n"
+  buffer << "HR resting                : #{phys.resting_heartrate.value} [#{phys.resting_heartrate.setting_source.to_s}] (last modified #{pb_sysdatetime_to_string phys.resting_heartrate.last_modified})\n"
+  buffer << "Aerobic threshold         : #{phys.aerobic_threshold.value} [#{phys.aerobic_threshold.setting_source.to_s}] (last modified #{pb_sysdatetime_to_string phys.aerobic_threshold.last_modified})\n"
+  buffer << "Anaerobic threshold       : #{phys.anaerobic_threshold.value} [#{phys.anaerobic_threshold.setting_source.to_s}] (last modified #{pb_sysdatetime_to_string phys.anaerobic_threshold.last_modified})\n"
+  buffer << "VO2max                    : #{phys.vo2max.value} [#{phys.vo2max.setting_source.to_s}] (last modified #{pb_sysdatetime_to_string phys.vo2max.last_modified})\n"
+  buffer << "Training background       : #{phys.training_background.value.to_s} (last modified #{pb_sysdatetime_to_string phys.training_background.last_modified})\n"
+  buffer << "Typical day               : #{phys.typical_day.value.to_s} (last modified #{pb_sysdatetime_to_string phys.typical_day.last_modified})\n" if phys.typical_day
   buffer << "Weekly recovery time sum  : #{phys.weekly_recovery_time_sum.value} (last modified #{pb_sysdatetime_to_string phys.weekly_recovery_time_sum.last_modified})\n"
-  buffer << "Functional threshold power: #{phys.functional_threshold_power.value} [#{PolarData::PbUserFunctionalThresholdPower::FTPSettingSource.value_to_names_map[phys.functional_threshold_power.setting_source].first.to_s}] (last modified #{pb_sysdatetime_to_string phys.functional_threshold_power.last_modified})\n"
+  buffer << "Functional threshold power: #{phys.functional_threshold_power.value} [#{phys.functional_threshold_power.setting_source.to_s}] (last modified #{pb_sysdatetime_to_string phys.functional_threshold_power.last_modified})\n"
   buffer
 end
 
