@@ -81,6 +81,8 @@ def output_tcx(parsed)
           route_i = route_samples_count > 0 ? 0 : nil
           alt_offline = false
           dist_offline = false
+          left_pedal_power_offline = false
+          right_pedal_power_offline = false
 
           process_lap = Proc.new { |lap_index, split_time, duration, distance, max_speed, avg_speed, max_hr, avg_hr, cadence_avg, avg_watts, max_watts|
             xml.Lap('xmlns' => "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2", 'StartTime' => (start + elapsed_with_pauses).strftime("%Y-%m-%dT%H:%M:%S.%3NZ")) {
@@ -120,6 +122,14 @@ def output_tcx(parsed)
                       dist_offline = samples.distance_offline.find { |off| off.start_index == i } || false
                     end
 
+                    if !left_pedal_power_offline || i > left_pedal_power_offline.stop_index
+                      left_pedal_power_offline = samples.left_pedal_power_offline.find { |off| off.start_index == i } || false
+                    end
+
+                    if !right_pedal_power_offline || i > right_pedal_power_offline.stop_index
+                      right_pedal_power_offline = samples.right_pedal_power_offline.find { |off| off.start_index == i } || false
+                    end
+
                     xml.Trackpoint {
                       xml.Time (start + elapsed_with_pauses).strftime("%Y-%m-%dT%H:%M:%S.%3NZ")
                       if route_i && route_samples.duration[route_i] && (route_samples.duration[route_i] / 1000 <= elapsed)
@@ -140,13 +150,21 @@ def output_tcx(parsed)
                       end
                       xml.Cadence samples.cadence_samples[i] if samples.cadence_samples[i]
                       xml.SensorState 'Present'
-                      if samples.left_pedal_power_samples[i]
+                      if samples.left_pedal_power_samples[i] || samples.right_pedal_power_samples[i]
                         xml.Extensions {
                           xml.TPX('xmlns' => "http://www.garmin.com/xmlschemas/ActivityExtension/v2") {
-                            if samples.right_pedal_power_samples[i] && samples.right_pedal_power_samples[i].current_power > 0
-                              xml.Watts samples.left_pedal_power_samples[i].current_power + samples.right_pedal_power_samples[i].current_power
-                            else
-                              xml.Watts samples.left_pedal_power_samples[i].current_power * 2
+                            pedal_powers = []
+                            if !right_pedal_power_offline && samples.right_pedal_power_samples[i]
+                              pedal_powers << samples.right_pedal_power_samples[i].current_power
+                            end
+                            if !left_pedal_power_offline && samples.left_pedal_power_samples[i]
+                              pedal_powers << samples.left_pedal_power_samples[i].current_power
+                            end
+                            case pedal_powers.count
+                            when 1
+                              xml.Watts pedal_powers.first * 2
+                            when 2
+                              xml.Watts pedal_powers.sum
                             end
                           }
                         }
