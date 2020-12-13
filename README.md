@@ -24,8 +24,9 @@ Tested with:
   * might also work on other models (A360, M400, Loop...), but this is untested
   * tested on Linux (Ubuntu 16.10), macOS (Yosemite) and Windows (10).
 * new generation:
+  * Polar Loop 2
   * Polar Ignite
-  * Polar Vantage M and V
+  * Polar Vantage M, V and V2
   * tested on Linux
 
 
