@@ -35,8 +35,8 @@ def output_txt(parsed)
   buffer << "VO2max                    : #{phys.vo2max.value} [#{phys.vo2max.setting_source.to_s}] (last modified #{pb_sysdatetime_to_string phys.vo2max.last_modified})\n"
   buffer << "Training background       : #{phys.training_background.value.to_s} (last modified #{pb_sysdatetime_to_string phys.training_background.last_modified})\n"
   buffer << "Typical day               : #{phys.typical_day.value.to_s} (last modified #{pb_sysdatetime_to_string phys.typical_day.last_modified})\n" if phys.typical_day
-  buffer << "Weekly recovery time sum  : #{phys.weekly_recovery_time_sum.value} (last modified #{pb_sysdatetime_to_string phys.weekly_recovery_time_sum.last_modified})\n"
-  buffer << "Functional threshold power: #{phys.functional_threshold_power.value} [#{phys.functional_threshold_power.setting_source.to_s}] (last modified #{pb_sysdatetime_to_string phys.functional_threshold_power.last_modified})\n"
+  buffer << "Weekly recovery time sum  : #{phys.weekly_recovery_time_sum.value} (last modified #{pb_sysdatetime_to_string phys.weekly_recovery_time_sum.last_modified})\n" if phys.weekly_recovery_time_sum
+  buffer << "Functional threshold power: #{phys.functional_threshold_power.value} [#{phys.functional_threshold_power.setting_source.to_s}] (last modified #{pb_sysdatetime_to_string phys.functional_threshold_power.last_modified})\n" if phys.functional_threshold_power
   buffer
 end
 
