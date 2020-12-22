@@ -239,12 +239,24 @@ def output_tcx(parsed)
             }
           }
           xml.Creator("xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance", 'xsi:type' => 'Device_t') {
-            xml.Name training_session.model_name
+            model_name = training_session.model_name
+            product_id = 0
+            version_major = 0
+            version_minor = 0
+            case model_name
+            when 'Polar V800'
+              product_id = 13
+            when 'Polar INW4A'
+              model_name = 'Polar Vantage V2'
+              product_id = 230
+              version_major = 2
+            end
+            xml.Name model_name
             xml.UnitId 0
-            xml.ProductID training_session.model_name == 'Polar V800' ? 13 : 0
+            xml.ProductID product_id
             xml.Version {
-              xml.VersionMajor 0
-              xml.VersionMinor 0
+              xml.VersionMajor version_major
+              xml.VersionMinor version_minor
               xml.BuildMajor 0
               xml.BuildMinor 0
             }
