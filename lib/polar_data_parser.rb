@@ -63,6 +63,10 @@ module PolarDataParser
       parsed[:exercise_laps] = PolarData::PbLaps.decode(File.open(File.join(dir, exercise_laps_file), 'rb').read)
     end
 
+    if exercise_auto_laps_file = files_in_dir.select { |f| f == 'ALAPS.BPB' }.first
+      parsed[:exercise_auto_laps] = PolarData::PbAutoLaps.decode(File.open(File.join(dir, exercise_auto_laps_file), 'rb').read)
+    end
+
     if exercise_stats_file = files_in_dir.select { |f| f == 'STATS.BPB' }.first
       parsed[:exercise_stats] = PolarData::PbExerciseStatistics.decode(File.open(File.join(dir, exercise_stats_file), 'rb').read)
     end

@@ -24,15 +24,17 @@ def output_tcx(parsed)
   samples = parsed[:samples]
   exercise = parsed[:exercise]
   laps = parsed[:exercise_laps]
+  auto_laps = parsed[:exercise_auto_laps]
   exercise_stats = parsed[:exercise_stats]
   route_samples = parsed[:route_samples]
 
-  start = DateTime.new(training_session.start.date.year, training_session.start.date.month, training_session.start.date.day, training_session.start.time.hour, training_session.start.time.minute, training_session.start.time.seconds, "%+i" % (training_session.start.time_zone_offset / 60)).to_time.utc
+  start = DateTime.new(exercise.start.date.year, exercise.start.date.month, exercise.start.date.day, exercise.start.time.hour, exercise.start.time.minute, exercise.start.time.seconds.to_f + exercise.start.time.millis.to_f / 1000, "%+i" % (exercise.start.time_zone_offset / 60)).to_time.utc
 
   recording_interval = samples ? samples.recording_interval.hours * 3600 + samples.recording_interval.minutes * 60 + samples.recording_interval.seconds + (samples.recording_interval.millis.to_f / 1000) : 0
 
   samples_count = samples ? samples.speed_samples.count : 0
   laps_count = laps ? laps.laps.count : 0
+  auto_laps_count = auto_laps ? auto_laps.autoLaps.count : 0
   route_samples_count = route_samples ? route_samples.latitude.count : 0
 
   altitude_delta = 0
@@ -84,7 +86,7 @@ def output_tcx(parsed)
           left_pedal_power_offline = false
           right_pedal_power_offline = false
 
-          process_lap = Proc.new { |lap_index, split_time, duration, distance, max_speed, avg_speed, max_hr, avg_hr, cadence_avg, avg_watts, max_watts|
+          process_lap = Proc.new { |lap_index, lap_trigger, split_time, duration, distance, max_speed, avg_speed, max_hr, avg_hr, cadence_avg, avg_watts, max_watts|
             xml.Lap('xmlns' => "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2", 'StartTime' => (start + elapsed_with_pauses).strftime("%Y-%m-%dT%H:%M:%S.%3NZ")) {
               xml.TotalTimeSeconds duration
               xml.DistanceMeters distance
@@ -100,7 +102,7 @@ def output_tcx(parsed)
               end
               xml.Intensity 'Active'
               xml.Cadence cadence_avg if cadence_avg && cadence_avg > 0
-              xml.TriggerMethod 'Manual'
+              xml.TriggerMethod lap_trigger
               create_new_track = !!samples
               while create_new_track do
                 xml.Track {
@@ -113,6 +115,8 @@ def output_tcx(parsed)
                       create_new_track = true
                       break
                     end
+
+                    break if i >= samples_count && i >= route_samples_count
 
                     if !alt_offline || i > alt_offline.stop_index
                       alt_offline = samples.altitude_offline.find { |off| off.start_index == i } || false
@@ -132,7 +136,7 @@ def output_tcx(parsed)
 
                     xml.Trackpoint {
                       xml.Time (start + elapsed_with_pauses).strftime("%Y-%m-%dT%H:%M:%S.%3NZ")
-                      if route_i && route_samples.duration[route_i] && (route_samples.duration[route_i] / 1000 <= elapsed)
+                      if route_i && route_samples.duration[route_i] #&& (route_samples.duration[route_i] / 1000 <= elapsed)
                         xml.Position  {
                           xml.LatitudeDegrees route_samples.latitude[route_i].round(8)
                           xml.LongitudeDegrees route_samples.longitude[route_i].round(8)
@@ -140,7 +144,7 @@ def output_tcx(parsed)
                         route_i += 1
                       end
                       xml.AltitudeMeters (samples.altitude_samples[i] + altitude_delta).round(3) if !alt_offline && samples.altitude_samples[i]
-                      if !dist_offline && samples.distance_samples[i] != prev_distance
+                      if !dist_offline && samples.distance_samples[i] #&& samples.distance_samples[i] != prev_distance
                         xml.DistanceMeters (prev_distance = samples.distance_samples[i])
                       end
                       if samples.heart_rate_samples[i] && samples.heart_rate_samples[i] > 0
@@ -170,13 +174,13 @@ def output_tcx(parsed)
                         }
                       end
                       first_sample_with_gps = false if first_sample_with_gps
-                    }
+                    }.xmlns = 'http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2'
 
                     i += 1
                     elapsed += recording_interval
                     elapsed_with_pauses += recording_interval
                   end
-                }
+                }.xmlns = 'http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2'
               end
               if (avg_speed && avg_speed > 0) || (avg_watts && avg_watts > 0)
                 xml.Extensions {
@@ -194,24 +198,26 @@ def output_tcx(parsed)
             }
           }
 
-          if laps_count == 0
+          if laps_count == 0 && auto_laps_count == 0
             process_lap.call(
               0,
-              pb_duration_to_float(training_session.duration) + recording_interval,
-              pb_duration_to_float(training_session.duration).round.to_f,
-              training_session.distance,
+              'Manual',
+              pb_duration_to_float(exercise.duration) + recording_interval,
+              pb_duration_to_float(exercise.duration).round.to_f,
+              exercise.distance,
               exercise_stats.speed ? exercise_stats.speed.maximum.to_f * 1000 / 3600 : nil,
               exercise_stats.speed ? exercise_stats.speed.average.to_f * 1000 / 3600 : nil,
-              training_session.heart_rate ? training_session.heart_rate.maximum : nil,
-              training_session.heart_rate ? training_session.heart_rate.average : nil,
+              exercise_stats.heart_rate ? exercise_stats.heart_rate.maximum : nil,
+              exercise_stats.heart_rate ? exercise_stats.heart_rate.average : nil,
               exercise_stats.cadence ? exercise_stats.cadence.average : nil,
               exercise_stats.power ? exercise_stats.power.average : nil,
               exercise_stats.power ? exercise_stats.power.maximum : nil
             )
-          else
+          elsif laps_count > 0
             laps.laps.each_with_index do |lap, lap_index|
               process_lap.call(
                 lap_index,
+                'Manual',
                 pb_duration_to_float(lap.header.split_time),
                 pb_duration_to_float(lap.header.duration).round.to_f,
                 lap.header.distance,
@@ -224,6 +230,55 @@ def output_tcx(parsed)
                 lap.statistics && lap.statistics.power ? lap.statistics.power.maximum : nil
               )
             end
+          else
+            auto_laps_total_distance = 0
+            lap_trigger = nil
+            auto_laps.autoLaps.each_with_index do |lap, lap_index|
+              lap_trigger = case lap.header.autolap_type
+                            when :AUTOLAP_TYPE_DISTANCE
+                              'Distance'
+                            when :AUTOLAP_TYPE_DURATION
+                              'Duration'
+                            when :AUTOLAP_TYPE_LOCATION
+                              'Location'
+                            else
+                              'Manual'
+                            end
+              process_lap.call(
+                lap_index,
+                lap_trigger,
+                pb_duration_to_float(lap.header.split_time),
+                pb_duration_to_float(lap.header.duration).round.to_f,
+                lap.header.distance,
+                lap.statistics && lap.statistics.speed ? lap.statistics.speed.maximum.to_f * 1000 / 3600 : nil,
+                lap.statistics && lap.statistics.speed ? lap.statistics.speed.average.to_f * 1000 / 3600 : nil,
+                lap.statistics && lap.statistics.heart_rate ? lap.statistics.heart_rate.maximum : nil,
+                lap.statistics && lap.statistics.heart_rate ? lap.statistics.heart_rate.average : nil,
+                lap.statistics && lap.statistics.cadence ? lap.statistics.cadence.average : nil,
+                lap.statistics && lap.statistics.power ? lap.statistics.power.average : nil,
+                lap.statistics && lap.statistics.power ? lap.statistics.power.maximum : nil
+              )
+              auto_laps_total_distance += lap.header.distance
+            end
+
+            end_time = pb_duration_to_float(exercise.duration)
+            if elapsed < end_time
+              # Add a final auto lap
+              process_lap.call(
+                auto_laps_count,
+                lap_trigger,
+                end_time,
+                end_time - elapsed,
+                exercise.distance - auto_laps_total_distance,
+                nil,
+                nil,
+                nil,
+                nil,
+                nil,
+                nil,
+                nil,
+              )
+            end
           end
 
           if training_session.note && training_session.note.text != ''
@@ -234,7 +289,7 @@ def output_tcx(parsed)
 
           xml.Training('VirtualPartner' => false) {
             xml.Plan('Type' => 'Workout', 'IntervalWorkout' => false) {
-              xml.Name training_session.session_name.text
+              xml.Name training_session.session_name.text if training_session.session_name.text != ''
               xml.Extensions {}
             }
           }
