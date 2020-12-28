@@ -102,7 +102,10 @@ class PolarFtp
               elsif remote_dir == "/" && entry.name == "SYNCINFO.BPB"
                 # Always fetch newest files
                 up2date = false
-              elsif remote_dir =~ /^\/U\/[0-9]*\/(S|TL)\/$/
+              elsif remote_dir =~ /\/TL\/$/
+                # Always fetch newest files
+                up2date = false
+              elsif remote_dir =~ /^\/U\/[0-9]*\/S\/$/
                 # Always fetch newest files
                 up2date = false
               end

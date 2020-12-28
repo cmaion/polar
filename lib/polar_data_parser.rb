@@ -18,6 +18,7 @@ require "exercise_route_pb"
 require "fitnesstestresult_pb"
 require "rr_recordtestresult_pb"
 require "dailysummary_pb"
+require "daily_training_load_pb"
 require "act_samples_pb"
 require "recovery_times_pb"
 require "swimming_samples_pb"
@@ -129,6 +130,18 @@ module PolarDataParser
 
     if file = files_in_dir.select { |f| f == 'DSUM.BPB' }.first
       parsed[:summary] = PolarData::PbDailySummary.decode(File.open(File.join(dir, file), 'rb').read)
+    end
+
+    parsed
+  end
+
+  def self.parse_daily_training_load(dir)
+    parsed = {}
+
+    files_in_dir = Dir.glob("#{dir}/*").map { |f| f.sub(/^#{dir}\//, '') }
+
+    if file = files_in_dir.select { |f| f == 'DAILYTLR.BPB' }.first
+      parsed[:training_load] = PolarData::PbDailyTrainingLoad.decode(File.open(File.join(dir, file), 'rb').read)
     end
 
     parsed

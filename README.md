@@ -7,14 +7,15 @@ A set of command line tools written in Ruby to interact with Polar watches and d
   * backup complete content
 * `polar_physdata2txt`: convert raw polar user physical data to TXT format
 * `polar_dailysummary2txt`: convert raw polar daily summary to TXT format
+* `polar_dailytrainingload2txt`: convert raw polar daily training load to TXT format
 * `polar_activitysamples2csv`: convert raw polar daily activity samples (activity, steps, metabolic equivalent, sport id and inactivity notifications) to CSV format
 * `polar_training2sml`: convert raw polar training sessions data files to the Suuntu SML file format
 * `polar_training2gpx`: convert raw polar training sessions data files to the Garmin GPX file format
 * `polar_training2tcx`: convert raw polar training sessions data files to the Garmin TCX file format
 * `polar_fitnesstest2txt`: displays content of fitness test result and exports to TXT file
 * `polar_training2rrtxt`: extracts RR intervals from polar training sessions data files
-* `polar_rrrecord2txt`: displays content of RR recording results and exports to TXT file (V800)
-* `polar_sleepanalysis2txt`: displays content of sleep analysis daily report and exports to TXT file (M430)
+* `polar_rrrecord2txt`: displays content of RR recording results and exports to TXT file
+* `polar_sleepanalysis2txt`: displays content of sleep analysis daily report and exports to TXT file
 
 Tested with:
 * old generation:
@@ -316,6 +317,17 @@ $ polar_sleepanalysis2txt <path/to/raw/polar/sleep> [<output_txt_file>]
 # Example:
 $ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
 $ polar_sleepanalysis2txt ~/Polar/<device_id>/U/0/<YYYYMMDD>/SLEEP /tmp/output.txt
+```
+
+
+Read daily training load report (TRIMP, acute and chronic loads) and convert to TXT file:
+
+```sh
+$ polar_dailytrainingload2txt <path/to/raw/polar/daily_training_load> [<output_txt_file>]
+
+# Example:
+$ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
+$ polar_dailytrainingload2txt ~/Polar/<device_id>/U/0/<YYYYMMDD>/TL /tmp/output.txt
 ```
 
 ## Known issues

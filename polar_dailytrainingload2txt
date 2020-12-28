@@ -1,0 +1,43 @@
+#!/usr/bin/env ruby
+# Parses RAW Polar daily training load data file and convert to TXT
+
+require "#{File.dirname(__FILE__)}/lib/polar_data_parser"
+
+def usage
+  puts "Usage:"
+  puts "  #{__FILE__} <directory> [<txt file>]"
+end
+
+dir = ARGV[0]
+unless dir
+  usage
+  exit -2
+end
+
+output_file = ARGV[1] || File.join(dir, 'output.txt')
+
+def output_txt(parsed)
+  tl = parsed[:training_load]
+  buffer = ""
+
+  buffer << "Date                                : #{pb_localdatetime_to_string tl.date}\n"
+
+  buffer << "TRIMP                               : #{tl.summary.trimp}\n"
+  buffer << "Acute load                          : #{tl.summary.acute_load}\n"
+  buffer << "Chronic load                        : #{tl.summary.chronic_load}\n"
+  buffer << "Cardio load ratio (acute/chronic)   : #{tl.summary.acute_load.to_f / tl.summary.chronic_load}\n"
+  buffer << "3-month average load                : #{tl.avg_90d_load}\n"
+  buffer << "?                                   : #{tl.summary.unknown}\n"
+  buffer << "?                                   : #{tl.unknown5}\n"
+end
+
+puts "Converting Polar daily summary in '#{dir}' to TXT format as '#{output_file}'..."
+parsed = PolarDataParser.parse_daily_training_load(dir)
+if parsed.key?(:training_load)
+  File.open(output_file, 'w') do |f|
+    f << output_txt(parsed)
+  end
+  puts "Done"
+else
+  puts "Error: couldn't find daily training load"
+end

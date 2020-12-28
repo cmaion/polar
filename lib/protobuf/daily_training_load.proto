@@ -1,0 +1,30 @@
+// Manually partially reverse engineered
+
+package polar_data;
+import "types.proto";
+
+message PbDailyTrainingLoadSummary {
+  required float trimp = 1;
+  required float acute_load = 2;
+  required float chronic_load = 3;
+  required uint32 unknown = 4;
+}
+
+message PbDailyTrainingLoadUnknown2 {
+  required float unknown2_1 = 1;
+  required float unknown2_2 = 2;
+}
+
+message PbDailyTrainingLoadUnknown4 {
+  required uint64 unknown4_1 = 1;
+  required .polar_data.PbDailyTrainingLoadUnknown2 unknown4_2 = 2;
+  required .polar_data.PbDailyTrainingLoadUnknown2 unknown4_3 = 3;
+}
+
+message PbDailyTrainingLoad {
+  required .polar_data.PbDailyTrainingLoadSummary summary = 1;
+  required float avg_90d_load = 2;
+  required .polar_data.PbDailyTrainingLoadUnknown4 unknown4 = 4;
+  required float unknown5 = 5;
+	required .PbLocalDateTime date = 100 ;
+}
