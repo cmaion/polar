@@ -46,7 +46,7 @@ def output_sml(parsed)
     end
   end if samples.altitude_calibration
 
-  builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
+  builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
     xml.sml('SdkVersion' => "2.4.89", 'Modified' => "2012-09-22T10:39:51", 'xmlns:xsi' => "http://www.w3.org/2001/XMLSchema-instance", 'xmlns:xsd' => "http://www.w3.org/2001/XMLSchema", 'xmlns' => "http://www.suunto.com/schemas/sml") {
       xml.DeviceLog {
         xml.Header {

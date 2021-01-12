@@ -53,7 +53,7 @@ def output_tcx(parsed)
     end
   end
 
-  builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
+  builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
     xml.TrainingCenterDatabase('xmlns' => "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2") {
       xml.Activities {
         sport = case sport ? sport.identifier.value : nil

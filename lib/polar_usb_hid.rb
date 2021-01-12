@@ -108,9 +108,9 @@ module PolarUsb
 
     def usb_read
       data = @handle.interrupt_transfer(
-        :endpoint => 1|LIBUSB::ENDPOINT_IN,
-        :dataIn => PACKET_SIZE,
-        :timeout => 100
+        endpoint: 1|LIBUSB::ENDPOINT_IN,
+        dataIn: PACKET_SIZE,
+        timeout: 100
       ).bytes
       #puts "DEBUG: read #{data.map { |i| i.to_s(16) }.join(' ')}"
       data
@@ -123,9 +123,9 @@ module PolarUsb
       end
       #puts "DEBUG: write #{packet.map { |i| i.to_s(16) }.join(' ')}"
       @handle.interrupt_transfer(
-        :endpoint => 1|LIBUSB::ENDPOINT_OUT,
-        :dataOut => packet.pack("C*"),
-        :timeout => 100
+        endpoint: 1|LIBUSB::ENDPOINT_OUT,
+        dataOut: packet.pack("C*"),
+        timeout: 100
       )
     end
   end

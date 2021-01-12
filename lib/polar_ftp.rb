@@ -27,8 +27,8 @@ class PolarFtp
 
     msg = PolarProtocol::PbPFtpOperation.encode(
       PolarProtocol::PbPFtpOperation.new(
-        :command => PolarProtocol::PbPFtpOperation::Command::GET,
-        :path => remote_dir))
+        command: PolarProtocol::PbPFtpOperation::Command::GET,
+        path: remote_dir))
 
     result = @polar_cnx.request(
       [ msg.length & 255, msg.length >> 8 ].pack("C*") + msg)
@@ -50,8 +50,8 @@ class PolarFtp
 
     msg = PolarProtocol::PbPFtpOperation.encode(
       PolarProtocol::PbPFtpOperation.new(
-        :command => PolarProtocol::PbPFtpOperation::Command::GET,
-        :path => remote_file))
+        command: PolarProtocol::PbPFtpOperation::Command::GET,
+        path: remote_file))
 
     result = @polar_cnx.request(
       [ msg.length & 255, msg.length >> 8 ].pack("C*") + msg)
