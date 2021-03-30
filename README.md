@@ -88,13 +88,10 @@ C:\Users\...> C:\Ruby23\bin\ruby.exe C:\path\to\this\project\directory\polar_tra
 
 
 ## Installation (all platforms)
-Install the following Ruby gems:
+Install the Ruby gem dependencies:
 
 ```sh
-$ gem install google-protobuf
-$ gem install libusb       # Required by polar_ftp
-$ gem install rubyserial   # Required by polar_ftp
-$ gem install nokogiri     # Required by polar_training2sml, polar_training2gpx and polar_training2tcx
+$ bundle install
 ```
 
 Download this repository and put it's content wherever you want (or use `git clone https://github.com/cmaion/polar` to clone it locally).
