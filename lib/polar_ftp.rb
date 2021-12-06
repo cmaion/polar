@@ -80,6 +80,7 @@ class PolarFtp
             local_file_size = File.size(local_file) rescue -1
 
             up2date = local_file_size == entry.size
+            up2date = true if remote_dir =~ /^\/SYS\/FONT\// # Don't download fonts, esp ZH_JA.RAW which is huge and fails for now
 
             if up2date
               if remote_dir =~ /\/DSUM\/$/
