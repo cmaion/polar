@@ -339,7 +339,6 @@ For now, only the first activity of a multisport training session (eg, triathlon
 * [bipolar](https://github.com/pcolby/bipolar) for the initial inspiration
 * [v800 downloader](https://github.com/profanum429/v800_downloader) for the initial USB protocol
 * [loophole](https://github.com/rsc-dev/loophole) for the .proto files
-* [Andrew Faraday](http://www.andrewfaraday.com/2015/08/reading-usb-controllers-in-ruby-or-what.html) for the sample Ruby USB code
 
 ## License
 GPL3
