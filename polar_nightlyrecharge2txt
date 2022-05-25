@@ -1,0 +1,55 @@
+#!/usr/bin/env ruby
+# Parses RAW Polar daily nighlty recharge data file and convert to TXT
+
+require "#{File.dirname(__FILE__)}/lib/polar_data_parser"
+
+def usage
+  puts "Usage:"
+  puts "  #{__FILE__} <directory> [<txt file>]"
+end
+
+dir = ARGV[0]
+unless dir
+  usage
+  exit -2
+end
+
+output_file = ARGV[1] || File.join(dir, 'output.txt')
+
+def output_txt(parsed)
+  nr = parsed[:nr]
+  buffer = ""
+
+  buffer << "Date                                : #{pb_date_to_string nr.date}\n"
+  buffer << "Nightly recharge status             : #{nr.nightly_recharge_status}\n"
+  buffer << "ANS charge                          : #{nr.ans_charge.round(1)} [-10...+10]\n"
+  buffer << "ANS charge status                   : #{nr.ans_charge_status}\n"
+  buffer << "Heart rate AVG                      : #{(60000.0 / nr.beat_to_beat_avg).round(1)} bpm\n"
+  buffer << "Heart rate REF                      : #{(nr.beat_to_beat_ref > 0 ? 60000.0 / nr.beat_to_beat_ref : 0).round(1)} bpm\n"
+  buffer << "RR AVG                              : #{nr.beat_to_beat_avg} ms\n"
+  buffer << "RR REF                              : #{nr.beat_to_beat_ref} ms\n"
+  buffer << "HRV AVG                             : #{nr.heart_rate_variability_avg} ms\n"
+  buffer << "HRV REF                             : #{nr.heart_rate_variability_ref} ms\n"
+  buffer << "Breathing rate AVG                  : #{(60000.0 / nr.breathing_rate_avg).round(1)} breaths/min\n"
+  buffer << "Breathing rate REF                  : #{(60000.0 / nr.breathing_rate_ref).round(1)} breaths/min\n"
+  buffer << "UNKNOWN0                            : #{nr.unknown0}\n"
+  buffer << "UNKNOWN1                            : #{nr.unknown1}\n"
+  buffer << "UNKNOWN2                            : #{nr.unknown2}\n"
+  buffer << "UNKNOWN3                            : #{nr.unknown3}\n"
+  buffer << "UNKNOWNSTR1                         : #{nr.unknownstr1}\n"
+  buffer << "UNKNOWNSTR2                         : #{nr.unknownstr2}\n"
+  buffer << "UNKNOWNSTR3                         : #{nr.unknownstr3}\n"
+
+  buffer
+end
+
+puts "Converting Polar nighlty recharge in '#{dir}' to TXT format as '#{output_file}'..."
+parsed = PolarDataParser.parse_nighlty_recharge(dir)
+if parsed.key?(:nr)
+  File.open(output_file, 'w') do |f|
+    f << output_txt(parsed)
+  end
+  puts "Done"
+else
+  puts "Error: couldn't find daily nighlty recharge report"
+end

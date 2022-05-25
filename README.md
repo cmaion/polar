@@ -16,6 +16,7 @@ A set of command line tools written in Ruby to interact with Polar watches and d
 * `polar_training2rrtxt`: extracts RR intervals from polar training sessions data files
 * `polar_rrrecord2txt`: displays content of RR recording results and exports to TXT file
 * `polar_sleepanalysis2txt`: displays content of sleep analysis daily report and exports to TXT file
+* `polar_nightlyrecharge2txt`: displays content of Nightly Recharge daily report and exports to TXT file
 
 Tested with:
 * old generation:
@@ -326,6 +327,18 @@ $ polar_dailytrainingload2txt <path/to/raw/polar/daily_training_load> [<output_t
 $ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
 $ polar_dailytrainingload2txt ~/Polar/<device_id>/U/0/<YYYYMMDD>/TL /tmp/output.txt
 ```
+
+
+Read daily Nightly Recharge report (ANS) and convert to TXT file:
+
+```sh
+$ polar_nightlyrecharge2txt <path/to/raw/polar/nightly_recharge> [<output_txt_file>]
+
+# Example:
+$ polar_ftp SYNC # Copy watch file system to ~/Polar/<device_id>
+$ polar_nightlyrecharge2txt ~/Polar/<device_id>/U/0/<YYYYMMDD>/NR /tmp/output.txt
+```
+
 
 ## Known issues
 For now, only the first activity of a multisport training session (eg, triathlon) is exported by the SML/GPX/TCX converters.

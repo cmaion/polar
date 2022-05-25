@@ -1,0 +1,44 @@
+syntax = "proto2";
+
+package polar_data;
+
+import "types.proto";
+
+enum PbNightlyRechargeStatus {
+    PB_VERY_POOR = 1;
+    PB_POOR = 2;
+    PB_COMPROMISED = 3;
+    PB_OK = 4;
+    PB_GOOD = 5;
+    PB_VERY_GOOD = 6;
+}
+
+enum PbNightlyRechargeANSStatus {
+    PB_MUCH_BELOW_USUAL = 1;
+    PB_BELOW_USUAL = 2;
+    PB_USUAL = 3;
+    PB_ABOVE_USUAL = 4;
+    PB_MUCH_ABOVE_USUAL = 5;
+}
+
+message PbNightlyRecharge {
+    required PbLocalDateTime time = 1;
+    required PbLocalDateTime time2 = 2;
+    required float ans_charge = 3;
+    required PbNightlyRechargeStatus nightly_recharge_status = 4;
+    required int32 unknown0 = 5;
+    required PbNightlyRechargeANSStatus ans_charge_status = 6;
+    required int32 beat_to_beat_avg = 8;
+    required int32 heart_rate_variability_avg = 9;
+    required uint32 breathing_rate_avg = 10;
+    required int32 beat_to_beat_ref = 11;
+    required int32 unknown1 = 12;
+    required int32 heart_rate_variability_ref = 13;
+    required int32 unknown2 = 14;
+    required uint32 breathing_rate_ref = 15;
+    required int32 unknown3 = 16;
+    required string unknownstr1 = 17;
+    required string unknownstr2 = 18;
+    required string unknownstr3 = 19;
+    required PbDate date = 20;
+}

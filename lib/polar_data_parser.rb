@@ -23,6 +23,7 @@ require "act_samples_pb"
 require "recovery_times_pb"
 require "swimming_samples_pb"
 require "sleepanalysisresult_pb"
+require "nightlyrecharge_pb"
 
 module PolarDataParser
   def self.parse_user_physdata(dir)
@@ -178,6 +179,18 @@ module PolarDataParser
 
     if file = files_in_dir.select { |f| f == 'SLEEPRES.BPB' }.first
       parsed[:sleep] = PolarData::PbSleepAnalysisResult.decode(File.open(File.join(dir, file), 'rb').read)
+    end
+
+    parsed
+  end
+
+  def self.parse_nighlty_recharge(dir)
+    parsed = {}
+
+    files_in_dir = Dir.glob("#{dir}/*").map { |f| f.sub(/^#{dir}\//, '') }
+
+    if file = files_in_dir.select { |f| f == 'NR.BPB' }.first
+      parsed[:nr] = PolarData::PbNightlyRecharge.decode(File.open(File.join(dir, file), 'rb').read)
     end
 
     parsed
