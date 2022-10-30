@@ -28,7 +28,7 @@ Tested with:
 * new generation:
   * Polar Loop 2
   * Polar Ignite
-  * Polar Vantage M, V and V2
+  * Polar Vantage M, M2, V and V2
   * tested on Linux
 
 
