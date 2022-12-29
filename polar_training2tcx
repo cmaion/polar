@@ -136,7 +136,7 @@ def output_tcx(parsed)
 
                     xml.Trackpoint {
                       xml.Time (start + elapsed_with_pauses).strftime("%Y-%m-%dT%H:%M:%S.%3NZ")
-                      if route_i && route_samples.duration[route_i] #&& (route_samples.duration[route_i] / 1000 <= elapsed)
+                      if route_i && route_samples.duration[route_i] && (route_samples.duration[route_i].to_f / 1000 <= elapsed)
                         xml.Position  {
                           xml.LatitudeDegrees route_samples.latitude[route_i].round(8)
                           xml.LongitudeDegrees route_samples.longitude[route_i].round(8)
