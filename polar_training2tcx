@@ -116,7 +116,7 @@ def output_tcx(parsed)
                       break
                     end
 
-                    break if i >= samples_count && i >= route_samples_count
+                    break if i >= samples_count && route_i >= route_samples_count
 
                     if !alt_offline || i > alt_offline.stop_index
                       alt_offline = samples.altitude_offline.find { |off| off.start_index == i } || false
@@ -173,7 +173,6 @@ def output_tcx(parsed)
                           }
                         }
                       end
-                      first_sample_with_gps = false if first_sample_with_gps
                     }.xmlns = 'http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2'
 
                     i += 1
