@@ -173,13 +173,13 @@ def output_tcx(parsed)
                           }
                         }
                       end
-                    }.xmlns = 'http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2'
+                    }
 
                     i += 1
                     elapsed += recording_interval
                     elapsed_with_pauses += recording_interval
                   end
-                }.xmlns = 'http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2'
+                }
               end
               if (avg_speed && avg_speed > 0) || (avg_watts && avg_watts > 0)
                 xml.Extensions {
