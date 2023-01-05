@@ -116,7 +116,7 @@ def output_tcx(parsed)
                       break
                     end
 
-                    break if i >= samples_count && route_i >= route_samples_count
+                    break if i >= samples_count && (!route_i || route_i >= route_samples_count)
 
                     if !alt_offline || i > alt_offline.stop_index
                       alt_offline = samples.altitude_offline.find { |off| off.start_index == i } || false
