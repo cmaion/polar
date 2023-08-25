@@ -1,4 +1,4 @@
-require 'rubyserial'
+require 'serialport'
 
 module PolarUsb
   class AcmController < BaseController
@@ -15,8 +15,8 @@ module PolarUsb
       self.serial_number = @device.serial_number
 
       begin
-        @serial = Serial.new @serial_dev, 115200
-      rescue RubySerial::Error => e
+        @serial = SerialPort.new @serial_dev, { 'baud' => 115200, 'data_bits' => 8, 'stop_bits' => 1, 'parity' => 0 }
+      rescue => e
         STDERR.write "#{self.product} serial #{self.serial_number} found, but couldn't open serial device on #{@serial_dev}: #{e}\nPlease specify the device to use with the -d option.\n"
         raise PolarUsbDeviceNotFound.new "Couldn't open Polar USB device on #{@serial_dev}: #{e}"
       end
@@ -65,7 +65,9 @@ module PolarUsb
       notification = []
 
       while !done || !packet.empty?
-        packet += @serial.read(65536).bytes
+        if buffer = @serial.read(65536)
+          packet += buffer.bytes
+        end
         payload = nil
 
         if packet.length == 0
