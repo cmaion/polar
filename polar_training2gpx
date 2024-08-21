@@ -30,11 +30,15 @@ def output_gpx(parsed)
 
   start = DateTime.new(training_session.start.date.year, training_session.start.date.month, training_session.start.date.day, training_session.start.time.hour, training_session.start.time.minute, training_session.start.time.seconds, "%+i" % (training_session.start.time_zone_offset / 60)).to_time
 
-  recording_interval = samples.recording_interval.hours * 3600 + samples.recording_interval.minutes * 60 + samples.recording_interval.seconds + (samples.recording_interval.millis.to_f / 1000)
+ if samples && samples.respond_to?(:recording_interval)
+    recording_interval = samples.recording_interval.hours * 3600 + samples.recording_interval.minutes * 60 + samples.recording_interval.seconds + (samples.recording_interval.millis.to_f / 1000)
+  else
+    recording_interval = 0
+  end
   #samples_count = samples.speed_samples.count
   #laps_count = laps ? laps.laps.count : 0
   route_samples_count = route_samples.latitude.count
-  heart_rate_samples_count = samples.heart_rate_samples.count
+  #heart_rate_samples_count = samples.heart_rate_samples.count
 
   builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
     xml.gpx('version' => "1.1",
@@ -54,16 +58,21 @@ def output_gpx(parsed)
           for i in 0..route_samples_count-1
             xml.trkpt(lat: route_samples.latitude[i].round(8), lon: route_samples.longitude[i].round(8)) {
               xml.ele route_samples.gps_altitude[i].to_f
-              xml.time datetime.iso8601
+              if route_samples.respond_to?(:duration)
+                datetime = start + route_samples.duration[i].to_f / 1000
+                xml.time datetime.iso8601
+              else
+                xml.time datetime.iso8601
+                datetime += recording_interval
+              end
               xml.extensions {
                 xml['gpxtpx'].TrackPointExtension {
-                  xml['gpxtpx'].atemp samples.temperature_samples[i].round(1) if samples.temperature_samples[i]
-                  xml['gpxtpx'].hr samples.heart_rate_samples[i]
-                  xml['gpxtpx'].cad samples.cadence_samples[i]
-                }
+                  xml['gpxtpx'].atemp samples.temperature_samples[i].round(1) if samples.respond_to?(:temperature_samples)
+                  xml['gpxtpx'].hr samples.heart_rate_samples[i] if samples.respond_to?(:heart_rate_samples)
+                  xml['gpxtpx'].cad samples.cadence_samples[i] if samples.respond_to?(:cadence_samples)
+                } if samples
               }
             }
-            datetime += recording_interval
           end
         }
       }
