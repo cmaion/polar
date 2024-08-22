@@ -83,6 +83,8 @@ module PolarDataParser
 
     if samples_file = files_in_dir.select { |f| f == 'SAMPLES.GZB' }.first
       parsed[:samples] = PolarData::PbExerciseSamples.decode(Zlib::GzipReader.new(File.open(File.join(dir, samples_file), 'rb')).read)
+    elsif samples_file = files_in_dir.select { |f| f == 'SAMPLES.BPB' }.first
+      parsed[:samples] = PolarData::PbExerciseSamples.decode(File.open(File.join(dir, samples_file), 'rb').read)
     end
 
     parsed
@@ -99,6 +101,8 @@ module PolarDataParser
 
     if samples_file = files_in_dir.select { |f| f == 'SAMPLES.GZB' }.first
       parsed[:samples] = PolarData::PbExerciseSamples.decode(Zlib::GzipReader.new(File.open(File.join(dir, samples_file), 'rb')).read)
+    elsif samples_file = files_in_dir.select { |f| f == 'SAMPLES.BPB' }.first
+      parsed[:samples] = PolarData::PbExerciseSamples.decode(File.open(File.join(dir, samples_file), 'rb').read)
     end
 
     if file = files_in_dir.select { |f| f == 'RR.GZB' }.first
