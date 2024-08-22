@@ -67,9 +67,9 @@ def output_gpx(parsed)
               end
               xml.extensions {
                 xml['gpxtpx'].TrackPointExtension {
-                  xml['gpxtpx'].atemp samples.temperature_samples[i].round(1) if samples.respond_to?(:temperature_samples)
-                  xml['gpxtpx'].hr samples.heart_rate_samples[i] if samples.respond_to?(:heart_rate_samples)
-                  xml['gpxtpx'].cad samples.cadence_samples[i] if samples.respond_to?(:cadence_samples)
+                  xml['gpxtpx'].atemp samples.temperature_samples[i].round(1) if samples.respond_to?(:temperature_samples) && samples.temperature_samples[i]
+                  xml['gpxtpx'].hr samples.heart_rate_samples[i] if samples.respond_to?(:heart_rate_samples) && samples.heart_rate_samples[i]
+                  xml['gpxtpx'].cad samples.cadence_samples[i] if samples.respond_to?(:cadence_samples) && samples.cadence_samples[i]
                 } if samples
               }
             }
