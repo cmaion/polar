@@ -3,8 +3,8 @@ GEM
   specs:
     ffi (1.17.0)
     ffi (1.17.0-x86_64-linux-gnu)
-    google-protobuf (3.25.3)
-    google-protobuf (3.25.3-x86_64-linux)
+    google-protobuf (3.25.5)
+    google-protobuf (3.25.5-x86_64-linux)
     libusb (0.7.1)
       ffi (~> 1.0)
       mini_portile2 (~> 2.1)
