@@ -1,0 +1,427 @@
+#!/usr/bin/env ruby
+# coding: utf-8
+# Converts RAW Polar data to sportstracker format.
+# for f in $(find ./data/U/0/ -name TSESS.BPB | sort) ; do d1=$(echo $f | sed "s/TSESS.BPB$//g"); ./polar_sportstracker $d1 ; done
+
+require 'nokogiri'
+require "#{File.dirname(__FILE__)}/lib/polar_data_parser"
+
+def usage
+  puts "Usage:"
+  puts "  #{__FILE__} <directory> <sportstracker>"
+end
+
+dir = ARGV[0]
+unless dir
+  usage
+  exit -2
+end
+
+sportstracker = ARGV[1] || File.join(Dir.home, '.sportstracker')
+unless sportstracker
+  usage
+  exit -2
+end
+
+def output_tcx(parsed)
+  sport = parsed[:sport]
+  training_session = parsed[:training_session]
+  sensors = parsed[:sensors]
+  samples = parsed[:samples]
+  exercise = parsed[:exercise]
+  laps = parsed[:exercise_laps]
+  auto_laps = parsed[:exercise_auto_laps]
+  exercise_stats = parsed[:exercise_stats]
+  route_samples = parsed[:route_samples]
+
+  start = DateTime.new(exercise.start.date.year, exercise.start.date.month, exercise.start.date.day, exercise.start.time.hour, exercise.start.time.minute, exercise.start.time.seconds.to_f + exercise.start.time.millis.to_f / 1000, "%+i" % (exercise.start.time_zone_offset / 60)).to_time.utc
+
+  recording_interval = samples ? samples.recording_interval.hours * 3600 + samples.recording_interval.minutes * 60 + samples.recording_interval.seconds + (samples.recording_interval.millis.to_f / 1000) : 0
+
+  samples_count = samples ? samples.speed_samples.count : 0
+  laps_count = laps ? laps.laps.count : 0
+  auto_laps_count = auto_laps ? auto_laps.autoLaps.count : 0
+  route_samples_count = route_samples ? route_samples.latitude.count : 0
+
+  altitude_delta = 0
+  altitude_calibration_samples = samples.altitude_calibration.each do |s|
+    if s.operation == :SUM
+      altitude_delta = s.value
+    else
+      STDERR.puts "Warning: Altitude calibration data of unsupported operation type ignored"
+    end
+  end if samples && samples.altitude_calibration
+
+  pauses = []
+  if samples && samples.pause_times && samples.pause_times.count > 0
+    samples.pause_times.each do |pause|
+      pauses << [ pb_duration_to_float(pause.start), pb_duration_to_float(pause.duration) ]
+    end
+  end
+
+  builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
+    xml.TrainingCenterDatabase('xmlns' => "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2") {
+      xml.Activities {
+        sport = case sport ? sport.identifier.value : nil
+                when 1,   # Running
+                     27   # Trail running
+                  "Running"
+                when 2    # Biking
+                  "Biking"
+                when 11   # Hiking
+                  "Hiking"
+                else
+                  # Strava also support "Walking" and "Swimming"
+                  case training_session && training_session.session_name ? training_session.session_name.text : nil
+                  when 'Biking', 'Cyclisme', "Vélo d'intérieur"
+                    'Biking'
+                  when 'Running', 'Course à pied'
+                    'Running'
+                  else
+                    "Other"
+                  end
+                end
+        xml.Activity('Sport' => sport) {
+          xml.Id start.strftime("%Y-%m-%dT%H:%M:%S.%3NZ")
+          elapsed = recording_interval
+          elapsed_with_pauses = recording_interval
+          i = 0
+          route_i = route_samples_count > 0 ? 0 : nil
+          alt_offline = false
+          dist_offline = false
+          left_pedal_power_offline = false
+          right_pedal_power_offline = false
+
+          process_lap = Proc.new { |lap_index, lap_trigger, split_time, duration, distance, max_speed, avg_speed, max_hr, avg_hr, cadence_avg, avg_watts, max_watts|
+            xml.Lap('xmlns' => "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2", 'StartTime' => (start + elapsed_with_pauses).strftime("%Y-%m-%dT%H:%M:%S.%3NZ")) {
+              xml.TotalTimeSeconds duration
+              xml.DistanceMeters distance
+              xml.MaximumSpeed max_speed if max_speed && max_speed > 0
+              xml.Calories lap_index == 0 ? exercise.calories : 0
+              if avg_hr && avg_hr > 0
+                xml.AverageHeartRateBpm {
+                  xml.Value avg_hr
+                }
+                xml.MaximumHeartRateBpm {
+                  xml.Value max_hr
+                }
+              end
+              xml.Intensity 'Active'
+              xml.Cadence cadence_avg if cadence_avg && cadence_avg > 0
+              xml.TriggerMethod lap_trigger
+              create_new_track = !!samples
+              while create_new_track do
+                xml.Track {
+                  create_new_track = false
+                  prev_distance = nil
+                  while elapsed < split_time + recording_interval/2
+                    if pauses.count > 0 && pauses.first[0] < elapsed
+                      paused_at, pause_duration = pauses.shift
+                      elapsed_with_pauses += pause_duration
+                      create_new_track = true
+                      break
+                    end
+
+                    break if i >= samples_count && i >= route_samples_count
+
+                    if !alt_offline || i > alt_offline.stop_index
+                      alt_offline = samples.altitude_offline.find { |off| off.start_index == i } || false
+                    end
+
+                    if !dist_offline || i > dist_offline.stop_index
+                      dist_offline = samples.distance_offline.find { |off| off.start_index == i } || false
+                    end
+
+                    if !left_pedal_power_offline || i > left_pedal_power_offline.stop_index
+                      left_pedal_power_offline = samples.left_pedal_power_offline.find { |off| off.start_index == i } || false
+                    end
+
+                    if !right_pedal_power_offline || i > right_pedal_power_offline.stop_index
+                      right_pedal_power_offline = samples.right_pedal_power_offline.find { |off| off.start_index == i } || false
+                    end
+
+                    xml.Trackpoint {
+                      xml.Time (start + elapsed_with_pauses).strftime("%Y-%m-%dT%H:%M:%S.%3NZ")
+                      if route_i && route_samples.duration[route_i] #&& (route_samples.duration[route_i] / 1000 <= elapsed)
+                        xml.Position  {
+                          xml.LatitudeDegrees route_samples.latitude[route_i].round(8)
+                          xml.LongitudeDegrees route_samples.longitude[route_i].round(8)
+                        }
+                        route_i += 1
+                      end
+                      xml.AltitudeMeters (samples.altitude_samples[i] + altitude_delta).round(3) if !alt_offline && samples.altitude_samples[i]
+                      if !dist_offline && samples.distance_samples[i] #&& samples.distance_samples[i] != prev_distance
+                        xml.DistanceMeters (prev_distance = samples.distance_samples[i])
+                      end
+                      if samples.heart_rate_samples[i] && samples.heart_rate_samples[i] > 0
+                        xml.HeartRateBpm {
+                          xml.Value samples.heart_rate_samples[i]
+                        }
+                      end
+                      xml.Cadence samples.cadence_samples[i] if samples.cadence_samples[i]
+                      xml.SensorState 'Present'
+                      if samples.left_pedal_power_samples[i] || samples.right_pedal_power_samples[i]
+                        xml.Extensions {
+                          xml.TPX('xmlns' => "http://www.garmin.com/xmlschemas/ActivityExtension/v2") {
+                            pedal_powers = []
+                            if !right_pedal_power_offline && samples.right_pedal_power_samples[i]
+                              pedal_powers << samples.right_pedal_power_samples[i].current_power
+                            end
+                            if !left_pedal_power_offline && samples.left_pedal_power_samples[i]
+                              pedal_powers << samples.left_pedal_power_samples[i].current_power
+                            end
+                            case pedal_powers.count
+                            when 1
+                              xml.Watts pedal_powers.first * 2
+                            when 2
+                              xml.Watts pedal_powers.sum
+                            end
+                          }
+                        }
+                      end
+                      first_sample_with_gps = false if first_sample_with_gps
+                    }.xmlns = 'http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2'
+
+                    i += 1
+                    elapsed += recording_interval
+                    elapsed_with_pauses += recording_interval
+                  end
+                }.xmlns = 'http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2'
+              end
+              if (avg_speed && avg_speed > 0) || (avg_watts && avg_watts > 0)
+                xml.Extensions {
+                  xml.LX('xmlns' => "http://www.garmin.com/xmlschemas/ActivityExtension/v2") {
+                    if avg_speed && avg_speed > 0
+                      xml.AvgSpeed avg_speed
+                    end
+                    if avg_watts && avg_watts > 0
+                      xml.AvgWatts avg_watts
+                      xml.MaxWatts max_watts
+                    end
+                  }
+                }
+              end
+            }
+          }
+
+          if laps_count == 0 && auto_laps_count == 0
+            process_lap.call(
+              0,
+              'Manual',
+              pb_duration_to_float(exercise.duration) + recording_interval,
+              pb_duration_to_float(exercise.duration).round.to_f,
+              exercise.distance,
+              exercise_stats.speed ? exercise_stats.speed.maximum.to_f * 1000 / 3600 : nil,
+              exercise_stats.speed ? exercise_stats.speed.average.to_f * 1000 / 3600 : nil,
+              exercise_stats.heart_rate ? exercise_stats.heart_rate.maximum : nil,
+              exercise_stats.heart_rate ? exercise_stats.heart_rate.average : nil,
+              exercise_stats.cadence ? exercise_stats.cadence.average : nil,
+              exercise_stats.power ? exercise_stats.power.average : nil,
+              exercise_stats.power ? exercise_stats.power.maximum : nil
+            )
+          elsif laps_count > 0
+            laps.laps.each_with_index do |lap, lap_index|
+              process_lap.call(
+                lap_index,
+                'Manual',
+                pb_duration_to_float(lap.header.split_time),
+                pb_duration_to_float(lap.header.duration).round.to_f,
+                lap.header.distance,
+                lap.statistics && lap.statistics.speed ? lap.statistics.speed.maximum.to_f * 1000 / 3600 : nil,
+                lap.statistics && lap.statistics.speed ? lap.statistics.speed.average.to_f * 1000 / 3600 : nil,
+                lap.statistics && lap.statistics.heart_rate ? lap.statistics.heart_rate.maximum : nil,
+                lap.statistics && lap.statistics.heart_rate ? lap.statistics.heart_rate.average : nil,
+                lap.statistics && lap.statistics.cadence ? lap.statistics.cadence.average : nil,
+                lap.statistics && lap.statistics.power ? lap.statistics.power.average : nil,
+                lap.statistics && lap.statistics.power ? lap.statistics.power.maximum : nil
+              )
+            end
+          else
+            auto_laps_total_distance = 0
+            lap_trigger = nil
+            auto_laps.autoLaps.each_with_index do |lap, lap_index|
+              lap_trigger = case lap.header.autolap_type
+                            when :AUTOLAP_TYPE_DISTANCE
+                              'Distance'
+                            when :AUTOLAP_TYPE_DURATION
+                              'Duration'
+                            when :AUTOLAP_TYPE_LOCATION
+                              'Location'
+                            else
+                              'Manual'
+                            end
+              process_lap.call(
+                lap_index,
+                lap_trigger,
+                pb_duration_to_float(lap.header.split_time),
+                pb_duration_to_float(lap.header.duration).round.to_f,
+                lap.header.distance,
+                lap.statistics && lap.statistics.speed ? lap.statistics.speed.maximum.to_f * 1000 / 3600 : nil,
+                lap.statistics && lap.statistics.speed ? lap.statistics.speed.average.to_f * 1000 / 3600 : nil,
+                lap.statistics && lap.statistics.heart_rate ? lap.statistics.heart_rate.maximum : nil,
+                lap.statistics && lap.statistics.heart_rate ? lap.statistics.heart_rate.average : nil,
+                lap.statistics && lap.statistics.cadence ? lap.statistics.cadence.average : nil,
+                lap.statistics && lap.statistics.power ? lap.statistics.power.average : nil,
+                lap.statistics && lap.statistics.power ? lap.statistics.power.maximum : nil
+              )
+              auto_laps_total_distance += lap.header.distance
+            end
+
+            end_time = pb_duration_to_float(exercise.duration)
+            if elapsed < end_time
+              # Add a final auto lap
+              process_lap.call(
+                auto_laps_count,
+                lap_trigger,
+                end_time,
+                end_time - elapsed,
+                exercise.distance - auto_laps_total_distance,
+                nil,
+                nil,
+                nil,
+                nil,
+                nil,
+                nil,
+                nil,
+              )
+            end
+          end
+
+          if training_session.note && training_session.note.text != ''
+            xml.Notes('xmlns' => "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2") {
+              xml.text training_session.note.text
+            }
+          end
+
+          xml.Training('VirtualPartner' => false) {
+            xml.Plan('Type' => 'Workout', 'IntervalWorkout' => false) {
+              xml.Name training_session.session_name.text if training_session.session_name.text != ''
+              xml.Extensions {}
+            }
+          }
+          xml.Creator("xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance", 'xsi:type' => 'Device_t') {
+            model_name = training_session.model_name
+            product_id = 0
+            version_major = 0
+            version_minor = 0
+            case model_name
+            when 'Polar V800'
+              product_id = 13
+            when 'Polar INW4A'
+              model_name = 'Polar Vantage V2'
+              product_id = 230
+              version_major = 2
+            end
+            xml.Name model_name
+            xml.UnitId 0
+            xml.ProductID product_id
+            xml.Version {
+              xml.VersionMajor version_major
+              xml.VersionMinor version_minor
+              xml.BuildMajor 0
+              xml.BuildMinor 0
+            }
+          }
+        }
+      }
+      xml.Author('xmlns:xsi' => "http://www.w3.org/2001/XMLSchema-instance", 'xsi:type' => 'Application_t') {
+        xml.Name 'https://github.com/cmaion/polar'
+        xml.Build {
+          xml.Version {
+            xml.VersionMajor 0
+            xml.VersionMinor 0
+          }
+        }
+        xml.LangID 'EN'
+        xml.PartNumber 'XXX-XXXXX-XX'
+      }
+    }
+  end
+  builder.to_xml
+end
+
+puts "Reading Polar training session in '#{dir}/TSESS.BPB'"
+parsed = PolarDataParser.parse_training_session(dir)
+if !parsed.key?(:training_session)
+  puts "Error: couldn't find training session"
+  exit -2
+end
+
+output_dir = File.join(sportstracker, '/polar/')
+if (!File.exist?(output_dir))
+  Dir.mkdir(output_dir)
+end
+
+file_date = "%4d%02d%02d_%02d%02d%02d" % [parsed[:training_session].start.date.year.to_i, parsed[:training_session].start.date.month.to_i, parsed[:training_session].start.date.day.to_i, parsed[:training_session].start.time.hour.to_i, parsed[:training_session].start.time.minute.to_i, parsed[:training_session].start.time.seconds.to_i]
+output_file = File.join(output_dir, "training_#{file_date}.tcx")
+if (!File.exist?(output_file))
+  output = output_tcx(parsed)
+  File.open(output_file, 'w') do |f|
+    f << output
+  end
+else
+  puts "Error: session file already outputed"
+end
+
+exercises_filename = File.join(sportstracker, 'exercises.xml')
+exercises_xml = File.open(exercises_filename) { |f| Nokogiri::XML(f) }
+
+found = exercises_xml.xpath("//exercise[hrm-file/text() = \"#{output_file}\"]").size
+if (found > 0)
+  puts "Error: session already imported"
+  exit -2
+end
+
+sporttypes_filename = File.join(sportstracker, 'sport-types.xml')
+sporttypes_xml = File.open(sporttypes_filename) { |f| Nokogiri::XML(f) }
+
+id = exercises_xml.xpath("//exercise/id/text()").last.to_s.to_i + 1
+polar_sport = parsed[:training_session].session_name.text
+sport_type_id = sporttypes_xml.xpath("//sport-type[name/text() = \"#{polar_sport}\"]/id/text()").first.to_s
+if (sport_type_id.nil? or sport_type_id.size == 0)
+  puts "Error: #{polar_sport} unavailable in sportstracker"
+  exit -2
+end
+
+sport_subtype_id = sporttypes_xml.xpath("//sport-type[name/text() = \"#{polar_sport}\"]/sport-subtype-list/sport-subtype/id/text()").first.to_s
+date = "%4d-%02d-%02dT%02d:%02d:%02d" % [parsed[:training_session].start.date.year.to_i, parsed[:training_session].start.date.month.to_i, parsed[:training_session].start.date.day.to_i, parsed[:training_session].start.time.hour.to_i, parsed[:training_session].start.time.minute.to_i, parsed[:training_session].start.time.seconds.to_i]
+duration = parsed[:training_session].duration.hours * 3600 + parsed[:training_session].duration.minutes * 60 + parsed[:training_session].duration.seconds
+training_load = parsed[:training_session].training_load.training_load_val unless parsed[:training_session].training_load.nil?
+training_load = 11 if training_load.nil?
+intensity = if (training_load < 6)
+              "MINIMUM"
+            elsif (training_load < 12)
+              "NORMAL"
+            elsif (training_load < 48)
+              "HIGH"
+            else
+              "MAXIMUM"
+            end
+distance = parsed[:training_session].distance.to_i / 1000
+avg_speed = distance / (duration.to_f / 3600)
+avg_heartrate = parsed[:training_session].heart_rate.average unless parsed[:training_session].heart_rate.nil?
+ascent = parsed[:exercise].ascent.to_i
+calories = parsed[:training_session].calories
+
+exercise = Nokogiri::XML::Node.new "exercise", exercises_xml
+exercise.add_child "        <id>#{id}</id>\n"
+exercise.add_child "        <sport-type-id>#{sport_type_id}</sport-type-id>\n"
+exercise.add_child "        <sport-subtype-id>#{sport_subtype_id}</sport-subtype-id>\n"
+exercise.add_child "        <date>#{date}</date>\n"
+exercise.add_child "        <duration>#{duration}</duration>\n"
+exercise.add_child "        <intensity>#{intensity}</intensity>\n"
+exercise.add_child "        <distance>#{distance}</distance>\n"
+exercise.add_child "        <avg-speed>#{avg_speed}</avg-speed>\n"
+exercise.add_child "        <avg-heartrate>#{avg_heartrate}</avg-heartrate>\n" unless avg_heartrate.nil?
+exercise.add_child "        <ascent>#{ascent}</ascent>\n" unless ascent.nil?
+exercise.add_child "        <calories>#{calories}</calories>\n"
+exercise.add_child "        <hrm-file>#{output_file}</hrm-file>\n"
+
+exercises = exercises_xml.at_css("exercise-list")
+exercise.parent = exercises
+
+File.open(exercises_filename, 'w') do |f|
+  f << exercises.to_s
+end
+
+puts "Done"
